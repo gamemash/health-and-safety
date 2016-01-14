@@ -10,8 +10,8 @@
   </head>
   <body>
     <script src="js/three.min.js"></script>
+    <script src="js/controls.js"></script>
     <script>
-
       var scene = new THREE.Scene();
       var width = window.innerWidth;
       var height = window.innerHeight;
@@ -34,8 +34,24 @@
         requestAnimationFrame( render );
         renderer.render( scene, camera );
       }
-      render();
 
+      window.addEventListener("downKey", function(event) {
+
+      });
+
+      window.addEventListener("upKey", function(event) {
+
+      });
+
+      window.addEventListener("leftKey", function(event) {
+
+      });
+
+      window.addEventListener("rightKey", function(event) {
+
+      });
+
+      render();
     </script>
   </body>
 </html>
