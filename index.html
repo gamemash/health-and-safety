@@ -15,24 +15,38 @@
       var scene = new THREE.Scene();
       var width = window.innerWidth;
       var height = window.innerHeight;
-      var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-      // var camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 );
+      //var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+      var camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, 1, 1000 );
 
       var renderer = new THREE.WebGLRenderer();
       renderer.setSize( window.innerWidth, window.innerHeight );
       document.body.appendChild( renderer.domElement );
 
-      var geometry = new THREE.BoxGeometry( 1, 1, 1 );
-      var material = new THREE.MeshBasicMaterial( { color: 0x444444 } );
-      var cube = new THREE.Mesh( geometry, material );
-      scene.add( cube );
+      var rectWidth = 40;
+      var rectLength = 40;
+      var rectShape = new THREE.Shape();
+      rectShape.moveTo( 0,0 );
+      rectShape.lineTo( 0, rectWidth );
+      rectShape.lineTo( rectLength, rectWidth );
+      rectShape.lineTo( rectLength, 0 );
+      rectShape.lineTo( 0, 0 );
 
-      camera.position.z = 10;
-      // cube.position.z = 3;
+      var rectGeom = new THREE.ShapeGeometry( rectShape );
+      var rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial( { color: 0xff0000 } ) ) ;
+
+      scene.add( rectMesh );
+      
+
+      camera.position.z = 200;
+      var radius = 100;
+      var time = 0.0;
 
       function render() {
         requestAnimationFrame( render );
         renderer.render( scene, camera );
+        rectMesh.position.x = Math.cos(time) * radius;
+        rectMesh.position.y = Math.sin(time) * radius;
+        time += 0.1; 
       }
 
       window.addEventListener("downKey", function(event) {
