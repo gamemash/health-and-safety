@@ -14,8 +14,8 @@ function init() {
   document.body.appendChild( renderer.domElement );
 
 
-  var rectWidth = 40;
-  var rectLength = 40;
+  var rectWidth = 1;
+  var rectLength = 1;
   var rectShape = new THREE.Shape();
   rectShape.moveTo( 0,0 );
   rectShape.lineTo( 0, rectWidth );
@@ -27,7 +27,8 @@ function init() {
 
   var loader = new THREE.TextureLoader();
   loader.load('images/house.png', function(texture){
-      //texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
       var material = new THREE.MeshBasicMaterial( {
         map: texture
       } );
