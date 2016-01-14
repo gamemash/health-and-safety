@@ -7,7 +7,7 @@ var renderer = new THREE.WebGLRenderer();
 
 var currentDirection = 0;
 var speed = 10.0;
-var rectMesh;
+var player = new Player();
 
 function init() {
   renderer.setSize( window.innerWidth, window.innerHeight );
@@ -25,18 +25,19 @@ function init() {
 
   var group = new THREE.Group();
 
+
   var loader = new THREE.TextureLoader();
-  loader.load('images/house.png', function(texture){
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
+  loader.load('images/wizard.png', function(texture){
       var material = new THREE.MeshBasicMaterial( {
         map: texture
       } );
 
-      var rectGeom = new THREE.ShapeGeometry( rectShape );
-      rectMesh = new THREE.Mesh( rectGeom, material ) ;
+      player.animatedTexture = new AnimatedTexture(texture);
 
-      group.add( rectMesh);
+      var rectGeom = new THREE.ShapeGeometry( rectShape );
+      player.mesh = new THREE.Mesh( rectGeom, material ) ;
+
+      group.add(player.mesh);
   });
 
   
@@ -52,26 +53,84 @@ function init() {
 
 function render() {
   var dt = 1.0 / 60.0;
-  if (keyboard.pressed("A")) {
-    rectMesh.position.x -= speed * dt;
-    console.log('left');
-  }
 
-  if (keyboard.pressed("S")) {
-    rectMesh.position.y -= speed * dt;
-    console.log('down');
-  }
-
-  if (keyboard.pressed("D")) {
-    rectMesh.position.x += speed * dt;
-    console.log('right');
-  }
-
-  if (keyboard.pressed("W")) {
-    rectMesh.position.y += speed * dt;
-    console.log('up');
-  }
+  if (player)
+    player.update(dt);
 
   requestAnimationFrame( render );
   renderer.render( scene, camera );
+}
+
+function Player(){
+  this.currentDirection = 2; //"WASD" = 0123
+  this.moving = false;
+  this.animatedTexture;
+  this.mesh;
+
+  this.update = function(dt){
+
+    if (keyboard.pressed("W")){
+      this.moving = true;
+      this.currentDirection = 0;
+    } else if (keyboard.pressed("A")){
+      this.moving = true;
+      this.currentDirection = 1;
+    } else if (keyboard.pressed("S")){
+      this.moving = true;
+      this.currentDirection = 2;
+    } else if (keyboard.pressed("D")){
+      this.moving = true;
+      this.currentDirection = 3;
+    } else {
+      this.moving = false;
+    }
+
+
+    if (this.animatedTexture){
+      this.animatedTexture.selectRow(this.currentDirection, this.moving);
+      this.animatedTexture.update(dt);
+    }
+
+  }
+}
+
+function AnimatedTexture(texture){
+  this.textureMap = [6, 6, 6, 4, 4, 4, 4, 4, 4, 4];
+  this.movingDirectionRowMap = [4, 5, 3, 5];
+  this.directionMap = [1, -1, 1, 1];
+  this.standingDirectionRowMap = [1, 2, 0, 2];
+
+  this.currentRow = 0;
+  this.currentColumn = 0;
+  this.numberOfColumns = 6;
+  this.numberOfRows = 10;
+  texture.repeat.set(1.0 / this.numberOfColumns, 1.0 / this.numberOfRows);
+  texture.offset.y = this.currentRow / this.numberOfRows;
+  texture.wrapS =  texture.wrapT = THREE.RepeatWrapping;
+  this.timeSinceAnimation = 0.0;
+  this.direction = 1;
+
+  this.update = function(dt){
+    texture.repeat.x = Math.abs(texture.repeat.x) * this.direction;
+    this.timeSinceAnimation += dt;
+    if (this.timeSinceAnimation > 0.1){
+      this.timeSinceAnimation = 0.0;
+      this.currentColumn = (this.currentColumn + this.direction + this.textureMap[this.currentRow]) % this.textureMap[this.currentRow];
+      texture.offset.x = this.currentColumn / this.numberOfColumns;
+    }
+  };
+
+  this.selectRow = function(direction, moving){
+    var oldRow = this.currentRow;
+    this.direction = this.directionMap[direction];
+    if (moving){
+      this.currentRow = this.movingDirectionRowMap[direction];
+    } else {
+      this.currentRow = this.standingDirectionRowMap[direction];
+    }
+
+    if (oldRow != this.currentRow){
+      texture.offset.y = this.currentRow / this.numberOfRows;
+    }
+  };
 }
