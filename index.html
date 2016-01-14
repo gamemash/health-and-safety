@@ -10,8 +10,9 @@
   </head>
   <body>
     <script src="js/three.min.js"></script>
-    <script src="js/controls.js"></script>
+    <script src="js/keyboard_state.js"></script>
     <script>
+      var keyboard = new THREEx.KeyboardState();
       var scene = new THREE.Scene();
       var width = window.innerWidth;
       var height = window.innerHeight;
@@ -31,25 +32,25 @@
       // cube.position.z = 3;
 
       function render() {
+        if (keyboard.pressed("A")) {
+          console.log('left');
+        }
+
+        if (keyboard.pressed("S")) {
+          console.log('down');
+        }
+
+        if (keyboard.pressed("D")) {
+          console.log('right');
+        }
+
+        if (keyboard.pressed("W")) {
+          console.log('up');
+        }
+
         requestAnimationFrame( render );
         renderer.render( scene, camera );
       }
-
-      window.addEventListener("downKey", function(event) {
-
-      });
-
-      window.addEventListener("upKey", function(event) {
-
-      });
-
-      window.addEventListener("leftKey", function(event) {
-
-      });
-
-      window.addEventListener("rightKey", function(event) {
-
-      });
 
       render();
     </script>
