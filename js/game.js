@@ -66,21 +66,26 @@ function Player(){
   this.moving = false;
   this.animatedTexture;
   this.mesh;
+  this.speed = 2.0;
 
   this.update = function(dt){
 
     if (keyboard.pressed("W")){
       this.moving = true;
       this.currentDirection = 0;
+      this.mesh.position.y += this.speed * dt;
     } else if (keyboard.pressed("A")){
       this.moving = true;
       this.currentDirection = 1;
+      this.mesh.position.x -= this.speed * dt;
     } else if (keyboard.pressed("S")){
       this.moving = true;
       this.currentDirection = 2;
+      this.mesh.position.y -= this.speed * dt;
     } else if (keyboard.pressed("D")){
       this.moving = true;
       this.currentDirection = 3;
+      this.mesh.position.x += this.speed * dt;
     } else {
       this.moving = false;
     }
@@ -116,7 +121,12 @@ function AnimatedTexture(texture){
     if (this.timeSinceAnimation > 0.1){
       this.timeSinceAnimation = 0.0;
       this.currentColumn = (this.currentColumn + this.direction + this.textureMap[this.currentRow]) % this.textureMap[this.currentRow];
-      texture.offset.x = this.currentColumn / this.numberOfColumns;
+      if (this.direction == 1)
+        texture.offset.x = this.currentColumn / this.numberOfColumns;
+      else{
+        texture.offset.x = this.currentColumn / this.numberOfColumns + 1;
+        //console.log(texture.offset.x);
+      }
     }
   };
 
