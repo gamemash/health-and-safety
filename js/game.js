@@ -36,6 +36,8 @@ function init() {
 
       var rectGeom = new THREE.ShapeGeometry( rectShape );
       player.mesh = new THREE.Mesh( rectGeom, material ) ;
+      player.mesh.scale.x = 1;
+      player.mesh.scale.y = 1;
 
       group.add(player.mesh);
   });
@@ -69,6 +71,8 @@ function Player(){
   this.speed = 2.0;
 
   this.update = function(dt){
+    if (!this.mesh)
+      return;
 
     if (keyboard.pressed("W")){
       this.moving = true;
@@ -118,10 +122,18 @@ function AnimatedTexture(texture){
   this.update = function(dt){
     //texture.repeat.x = Math.abs(texture.repeat.x) * this.direction;
     this.timeSinceAnimation += dt;
+
+    if (this.direction == -1){
+      texture.repeat.x = -1.0 / this.numberOfColumns;
+      texture.offset.x = (this.currentColumn + 1) / this.numberOfColumns;
+    } else {
+      texture.repeat.x = 1.0 / this.numberOfColumns;
+      texture.offset.x = this.currentColumn / this.numberOfColumns;
+    }
+
     if (this.timeSinceAnimation > 0.1){
       this.timeSinceAnimation = 0.0;
       this.currentColumn = (this.currentColumn + this.direction + this.textureMap[this.currentRow]) % this.textureMap[this.currentRow];
-      texture.offset.x = this.currentColumn / this.numberOfColumns;
     }
   };
 
@@ -135,6 +147,8 @@ function AnimatedTexture(texture){
     }
 
     if (oldRow != this.currentRow){
+      this.currentColumn = this.currentColumn % this.textureMap[this.currentRow];
+      texture.offset.x = this.currentColumn / this.numberOfColumns;
       texture.offset.y = this.currentRow / this.numberOfRows;
     }
   };
