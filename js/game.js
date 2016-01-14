@@ -116,17 +116,12 @@ function AnimatedTexture(texture){
   this.direction = 1;
 
   this.update = function(dt){
-    texture.repeat.x = Math.abs(texture.repeat.x) * this.direction;
+    //texture.repeat.x = Math.abs(texture.repeat.x) * this.direction;
     this.timeSinceAnimation += dt;
     if (this.timeSinceAnimation > 0.1){
       this.timeSinceAnimation = 0.0;
       this.currentColumn = (this.currentColumn + this.direction + this.textureMap[this.currentRow]) % this.textureMap[this.currentRow];
-      if (this.direction == 1)
-        texture.offset.x = this.currentColumn / this.numberOfColumns;
-      else{
-        texture.offset.x = this.currentColumn / this.numberOfColumns + 1;
-        //console.log(texture.offset.x);
-      }
+      texture.offset.x = this.currentColumn / this.numberOfColumns;
     }
   };
 
