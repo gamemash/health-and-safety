@@ -31,38 +31,49 @@
       rectShape.lineTo( rectLength, 0 );
       rectShape.lineTo( 0, 0 );
 
-      var rectGeom = new THREE.ShapeGeometry( rectShape );
-      var rectMesh = new THREE.Mesh( rectGeom, new THREE.MeshBasicMaterial( { color: 0xff0000 } ) ) ;
+      var group = new THREE.Group();
 
-      scene.add( rectMesh );
+      var loader = new THREE.TextureLoader();
+      loader.load('images/house.png', function(texture){
+          //texture.wrapS = THREE.RepeatWrapping;
+          var material = new THREE.MeshBasicMaterial( {
+            map: texture
+          } );
+
+          var rectGeom = new THREE.ShapeGeometry( rectShape );
+          var rectMesh = new THREE.Mesh( rectGeom, material ) ;
+
+          group.add( rectMesh);
+      });
+
+      
+
+      scene.add( group );
       
 
       camera.position.z = 200;
-      var radius = 100;
-      var time = 0.0;
+
+      var speed = 10.0;
 
       function render() {
         requestAnimationFrame( render );
         renderer.render( scene, camera );
-        rectMesh.position.x = Math.cos(time) * radius;
-        rectMesh.position.y = Math.sin(time) * radius;
-        time += 0.1; 
       }
 
       window.addEventListener("downKey", function(event) {
-
+        rectMesh.position.y -= speed;
       });
 
       window.addEventListener("upKey", function(event) {
-
+        rectMesh.position.y += speed;
       });
 
       window.addEventListener("leftKey", function(event) {
-
+        rectMesh.position.x -= speed;
       });
 
       window.addEventListener("rightKey", function(event) {
-
+        rectMesh.position.x += speed;
       });
 
       render();
