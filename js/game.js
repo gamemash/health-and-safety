@@ -3,12 +3,14 @@ var scene = new THREE.Scene();
 var width = window.innerWidth;
 var height = window.innerHeight;
 var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-var renderer = new THREE.WebGLRenderer();
+var renderer = new THREE.WebGLRenderer({alpha: true});
+
 
 var currentDirection = 0;
 var speed = 10.0;
 var player = new Player();
-
+var cameraLocationTest;
+var world = [];
 function init() {
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild( renderer.domElement );
@@ -25,22 +27,44 @@ function init() {
 
   var group = new THREE.Group();
 
-
   var loader = new THREE.TextureLoader();
   loader.load('images/wizard.png', function(texture){
-      var material = new THREE.MeshBasicMaterial( {
-        map: texture
-      } );
+    var material = new THREE.MeshBasicMaterial( {
+      map: texture
+    } );
 
-      player.animatedTexture = new AnimatedTexture(texture);
+    player.animatedTexture = new AnimatedTexture(texture);
 
-      var rectGeom = new THREE.ShapeGeometry( rectShape );
-      player.mesh = new THREE.Mesh( rectGeom, material ) ;
-      player.mesh.scale.x = 1;
-      player.mesh.scale.y = 1;
+    var rectGeom = new THREE.ShapeGeometry( rectShape );
+    player.mesh = new THREE.Mesh( rectGeom, material ) ;
+    player.mesh.scale.x = 1;
+    player.mesh.scale.y = 1;
+    player.mesh.position.z = 1;
 
-      group.add(player.mesh);
+    group.add(player.mesh);
+    world[world.length] = player;
   });
+
+  loader.load('images/house.png', function(texture){
+    var material = new THREE.MeshBasicMaterial( {
+      map: texture
+    } );
+
+    var rectGeom = new THREE.ShapeGeometry(rectShape );
+    var mesh = new THREE.Mesh( rectGeom, material ) ;
+    var newHouse = new House(texture, mesh, 10, -1);
+    group.add(newHouse.mesh);
+    world[world.length] = newHouse;
+  });
+
+  {
+
+    var material = new THREE.MeshBasicMaterial( { color: 0xff00ff } )
+    var rectGeom = new THREE.ShapeGeometry(rectShape );
+    cameraLocationTest = new THREE.Mesh( rectGeom, material ) ;
+    group.add(cameraLocationTest);
+
+  }
 
   
 
@@ -59,6 +83,27 @@ function render() {
   if (player)
     player.update(dt);
 
+  var sumIntensity = 0.0;
+  for(index in world){
+    sumIntensity += world[index].cameraGravity;
+  }
+
+  var cameraPosition = new THREE.Vector2(0, 0);
+
+  for(index in world){
+    cameraPosition.x += (world[index].mesh.position.x * world[index].cameraGravity) / sumIntensity;
+    cameraPosition.y += (world[index].mesh.position.y * world[index].cameraGravity) / sumIntensity;
+  }
+
+  if (cameraLocationTest){
+    cameraLocationTest.position.x = cameraPosition.x;
+    cameraLocationTest.position.y = cameraPosition.y;
+  }
+
+  camera.position.x = cameraPosition.x;
+  camera.position.y = cameraPosition.y;
+
+
   requestAnimationFrame( render );
   renderer.render( scene, camera );
 }
@@ -69,6 +114,7 @@ function Player(){
   this.animatedTexture;
   this.mesh;
   this.speed = 2.0;
+  this.cameraGravity = 10;
 
   this.update = function(dt){
     if (!this.mesh)
@@ -152,4 +198,14 @@ function AnimatedTexture(texture){
       texture.offset.y = this.currentRow / this.numberOfRows;
     }
   };
+}
+
+
+function House(texture, mesh, x, y){
+  this.mesh = mesh;
+  this.mesh.scale.x = 5;
+  this.mesh.scale.y = 5;
+  this.mesh.position.x = x;
+  this.mesh.position.y = y;
+  this.cameraGravity = 3;
 }
