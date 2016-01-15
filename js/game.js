@@ -12,6 +12,7 @@ var player = new Player();
 var centerOfGravityCamera;
 var cameraLocationTest;
 var world = [];
+var viewCorrectionDistance = 10;
 
 function init() {
   renderer.setSize( window.innerWidth, window.innerHeight );
@@ -90,12 +91,17 @@ function render() {
 
   var sumIntensity = 0.0;
   for(index in world){
+    if (world[index].mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
+      continue;
+
     sumIntensity += world[index].cameraGravity;
   }
 
   var cameraPosition = new THREE.Vector2(0, 0);
 
   for(index in world){
+    if (world[index].mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
+      continue;
     cameraPosition.x += (world[index].mesh.position.x * world[index].cameraGravity) / sumIntensity;
     cameraPosition.y += (world[index].mesh.position.y * world[index].cameraGravity) / sumIntensity;
   }
@@ -210,7 +216,7 @@ function AnimatedTexture(texture){
 }
 
 function CenterOfGravityCamera(camera){
-  this.maxCameraSpeed = 8.0;
+  this.maxCameraSpeed = 5.0;
   this.time = 0;
 
   this.update = function(newCenterOfGravity, dt){
