@@ -210,8 +210,6 @@ function AnimatedTexture(texture){
 }
 
 function CenterOfGravityCamera(camera){
-  this.velocity = new THREE.Vector2(0, 0);
-  this.lastCenterOfGravity = new THREE.Vector2(0, 0);
   this.maxCameraSpeed = 8.0;
   this.time = 0;
 
