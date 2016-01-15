@@ -9,8 +9,10 @@ var renderer = new THREE.WebGLRenderer({alpha: true});
 var currentDirection = 0;
 var speed = 10.0;
 var player = new Player();
+var centerOfGravityCamera;
 var cameraLocationTest;
 var world = [];
+
 function init() {
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild( renderer.domElement );
@@ -71,6 +73,9 @@ function init() {
   scene.add( group );
 
   camera.position.z = 10;
+  centerOfGravityCamera = new CenterOfGravityCamera(camera);
+
+  
 
   render();
 }
@@ -100,8 +105,12 @@ function render() {
     cameraLocationTest.position.y = cameraPosition.y;
   }
 
-  camera.position.x = cameraPosition.x;
-  camera.position.y = cameraPosition.y;
+  if (centerOfGravityCamera)
+    centerOfGravityCamera.update(cameraPosition, dt);
+  
+
+  //camera.position.x = cameraPosition.x;
+  //camera.position.y = cameraPosition.y;
 
 
   requestAnimationFrame( render );
@@ -198,6 +207,27 @@ function AnimatedTexture(texture){
       texture.offset.y = this.currentRow / this.numberOfRows;
     }
   };
+}
+
+function CenterOfGravityCamera(camera){
+  this.velocity = new THREE.Vector2(0, 0);
+  this.lastCenterOfGravity = new THREE.Vector2(0, 0);
+  this.maxCameraSpeed = 8.0;
+  this.time = 0;
+
+  this.update = function(newCenterOfGravity, dt){
+    this.time += dt;
+    var distance = newCenterOfGravity.distanceTo(camera.position);
+    var factor = (1.0 - Math.exp(-distance / this.maxCameraSpeed)) * this.maxCameraSpeed;
+
+    var difference = newCenterOfGravity.sub(camera.position);
+    var velocity = difference.normalize().multiplyScalar(factor);
+    camera.position.x += velocity.x * dt;
+    camera.position.y += velocity.y * dt;
+
+
+  };
+
 }
 
 
