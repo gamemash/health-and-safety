@@ -1,4 +1,5 @@
 var keyboard = new THREEx.KeyboardState();
+var gamepad = new THREEx.GamepadState();
 var scene = new THREE.Scene();
 var width = window.innerWidth;
 var height = window.innerHeight;
@@ -38,7 +39,7 @@ function initGame() {
   rectShape.lineTo( rectLength, rectWidth );
   rectShape.lineTo( rectLength, 0 );
   rectShape.lineTo( 0, 0 );
-  
+
 
   var group = new THREE.Group();
 
@@ -73,7 +74,7 @@ function initGame() {
     group.add(cameraLocationTest);
   }
 
-  
+
   scene.add( group );
 
   render();
@@ -101,8 +102,8 @@ function render() {
   cameraPosition.divideScalar(sumIntensity);
 
   if (cameraLocationTest){ //show the desired camera center in the world
-    cameraLocationTest.position.setX(cameraPosition.x); 
-    cameraLocationTest.position.setY(cameraPosition.y); 
+    cameraLocationTest.position.setX(cameraPosition.x);
+    cameraLocationTest.position.setY(cameraPosition.y);
   }
 
   if (camera)
@@ -152,7 +153,7 @@ function Player(){
   this.animatedTexture = new AnimatedTexture(Player.texture);
   this.mesh = new THREE.Mesh( rectGeom, this.material );
   this.position = this.mesh.position;
-  
+
   this.position.z = 1;
 
 
@@ -160,6 +161,50 @@ function Player(){
   this.update = function(dt){
     if (!this.mesh)
       return;
+
+    if (gamepad.pressed(0)) {
+      console.log('X');
+    }
+
+    if (gamepad.pressed(1)) {
+      console.log('O');
+    }
+
+    if (gamepad.pressed(2)) {
+      console.log('Square');
+    }
+
+    if (gamepad.pressed(3)) {
+      console.log('Triangle');
+    }
+
+    if (gamepad.pressed(13)) {
+      // down
+      this.moving = true;
+      this.currentDirection = 2;
+      this.mesh.position.y -= this.speed * dt;
+    }
+
+    if (gamepad.pressed(14)) {
+      // left
+      this.moving = true;
+      this.currentDirection = 1;
+      this.mesh.position.x -= this.speed * dt;
+    }
+
+    if (gamepad.pressed(15)) {
+      // right
+      this.moving = true;
+      this.currentDirection = 3;
+      this.mesh.position.x += this.speed * dt;
+    }
+
+    if (gamepad.pressed(12)) {
+      // up
+      this.moving = true;
+      this.currentDirection = 0;
+      this.mesh.position.y += this.speed * dt;
+    }
 
     if (keyboard.pressed("W")){
       this.moving = true;
@@ -206,7 +251,7 @@ function Player(){
         velocity.x += 1;
         break;
     }
-    
+
     velocity.multiplyScalar(this.speed);
     velocity.add(this.mesh.position);
     return new THREE.Vector2(velocity.x * this.cameraGravity, velocity.y * this.cameraGravity);

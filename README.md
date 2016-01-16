@@ -33,3 +33,11 @@ Ongoing things to think about and define:
   - graphics
   - character abilities
   - items
+
+
+References
+------------------------------------------
+
+Gamepad API
+  - https://w3c.github.io/gamepad/
+  - https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API/Using_the_Gamepad_API
