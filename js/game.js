@@ -13,8 +13,18 @@ var centerOfGravityCamera;
 var cameraLocationTest;
 var world = [];
 var viewCorrectionDistance = 10;
+//var tileSheet = new TileSheet("tilesheet.png");
+
+var images = ["tilesheet.png", "wizard.png", "house.png"];
+var imageLoader;
+
+
 
 function init() {
+  imageLoader = new ImageLoader(images);
+}
+
+function initGame() {
   renderer.setSize( window.innerWidth, window.innerHeight );
   document.body.appendChild( renderer.domElement );
 
@@ -28,13 +38,23 @@ function init() {
   rectShape.lineTo( rectLength, 0 );
   rectShape.lineTo( 0, 0 );
 
+
   var group = new THREE.Group();
 
   var loader = new THREE.TextureLoader();
-  loader.load('images/wizard.png', function(texture){
+
+  {
+
+    //var texture = imageLoader.createSprite("wizard.png", 64, 64, 0, 0);
+    var texture = new THREE.Texture();
+    texture.image = imageLoader.image("wizard.png");
+    texture.needsUpdate = true;
+
+    console.log(texture);
     var material = new THREE.MeshBasicMaterial( {
       map: texture
     } );
+    //var material = new THREE.MeshBasicMaterial( { color: 0x0000ff } )
 
     player.animatedTexture = new AnimatedTexture(texture);
 
@@ -46,9 +66,13 @@ function init() {
 
     group.add(player.mesh);
     world[world.length] = player;
-  });
 
-  loader.load('images/house.png', function(texture){
+  }
+  {
+
+    var texture = imageLoader.createSprite("tilesheet.png", 256, 512, 170, 100);
+
+
     var material = new THREE.MeshBasicMaterial( {
       map: texture
     } );
@@ -58,9 +82,11 @@ function init() {
     var newHouse = new House(texture, mesh, 10, -1);
     group.add(newHouse.mesh);
     world[world.length] = newHouse;
-  });
+
+  }
 
   {
+
 
     var material = new THREE.MeshBasicMaterial( { color: 0xff00ff } )
     var rectGeom = new THREE.ShapeGeometry(rectShape );
@@ -243,3 +269,102 @@ function House(texture, mesh, x, y){
   this.mesh.position.y = y;
   this.cameraGravity = 3;
 }
+
+
+function ImageLoader(imageFilenames){
+  this.numberLoaded = 0;
+  this.numberImages = imageFilenames.length;
+  this.imageFilenames = imageFilenames;
+  this.folder = "images/";
+  this.images = {};
+
+  for(index in this.imageFilenames){
+    var filename = this.imageFilenames[index];
+    var path = this.folder + filename;
+
+
+    var image = new Image();
+    image.src = path;
+    image.onload = (function(imageLoader, index){
+      return function(){
+        imageLoader.loaded(index);
+      }
+    })(this, index);
+
+    this.images[filename] = {
+      'filename': filename,
+      'loaded': false,
+      'image': image
+    }
+  }
+
+  this.loaded = function(index){
+    this.numberLoaded++;
+    if (this.numberLoaded == this.numberImages){
+      initGame();
+    }
+    var filename = this.imageFilenames[index];
+    this.images[filename].loaded = true;
+  }
+
+  this.image = function(filename){
+    return this.images[filename].image;
+  }
+
+  this.createSprite = function (filename, width, height, offset_x, offset_y){
+    var image = this.image(filename);
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    var dataTexture, data;
+
+      
+    ctx.drawImage(image, offset_x, offset_y, width, height, 0, 0, width, height);
+    data = ctx.getImageData(0, 0, width, height);
+    console.log(data);
+
+    dataTexture = new THREE.DataTexture(new Uint8Array(data.data.buffer), width, height, THREE.RGBAFormat);
+    dataTexture.flipY = true;
+    dataTexture.needsUpdate = true;
+    return dataTexture;
+  }
+
+
+
+}
+
+//function TileSheet(filename){
+//  this.texture;
+//  this.material;
+//  this.isLoaded = false;
+//
+//  this.image = new Image();
+//  this.image.src = 'images/' + filename;
+//
+//  //loader.load('images/' + filename, function(texture){
+//  //  this.material = new THREE.MeshBasicMaterial( {
+//  //    map: texture
+//  //  } );
+//  //  this.texture = texture;
+//  //});
+//  //
+//  this.loaded = function(){
+//    tileSheet.createSprite(64,64,0, 0);
+//  }
+//
+//  this.image.onload = this.loaded;
+//
+//  this.createSprite = function(width, height, offset_x, offset_y){
+//    var canvas = document.createElement('canvas'),
+//      ctx = canvas.getContext('2d'),
+//      width = this.image.width,
+//      height = this.image.height,
+//      finalData, data;
+//
+//    ctx.drawImage(this.image, offset_x, offset_y, width, height);
+//    this.texture = new THREE.Texture(canvas);
+//    
+//    //finalData = ctx.getImageData(0, 0, width, height);
+//    //finalData.data;
+//
+//  }
+//}
