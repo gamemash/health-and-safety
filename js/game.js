@@ -160,6 +160,8 @@ function Player(){
 
 
   this.update = function(dt){
+    this.moving = false;
+
     if (!this.mesh)
       return;
 
@@ -211,20 +213,24 @@ function Player(){
       this.moving = true;
       this.currentDirection = 0;
       this.mesh.position.y += this.speed * dt;
-    } else if (keyboard.pressed("A")){
+    }
+
+    if (keyboard.pressed("A")){
       this.moving = true;
       this.currentDirection = 1;
       this.mesh.position.x -= this.speed * dt;
-    } else if (keyboard.pressed("S")){
+    }
+
+    if (keyboard.pressed("S")){
       this.moving = true;
       this.currentDirection = 2;
       this.mesh.position.y -= this.speed * dt;
-    } else if (keyboard.pressed("D")){
+    }
+
+    if (keyboard.pressed("D")){
       this.moving = true;
       this.currentDirection = 3;
       this.mesh.position.x += this.speed * dt;
-    } else {
-      this.moving = false;
     }
 
 
