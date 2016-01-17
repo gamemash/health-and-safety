@@ -27,8 +27,9 @@ function init() {
 }
 
 function initGame() {
+  var gameCanvas = document.getElementById('game-canvas');
   renderer.setSize( window.innerWidth, window.innerHeight );
-  document.body.appendChild( renderer.domElement );
+  gameCanvas.appendChild( renderer.domElement );
 
 
   var rectWidth = 1;
