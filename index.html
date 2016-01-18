@@ -7,7 +7,11 @@
     <script src="js/three.min.js"></script>
     <script src="js/keyboard_state.js"></script>
     <script src="js/gamepad_state.js"></script>
+    <script src="js/input_state.js"></script>
     <script src="js/game.js"></script>
+
+    <script src="https://fb.me/react-0.14.6.min.js"></script>
+    <script src="https://fb.me/react-dom-0.14.6.min.js"></script>
   </head>
   <body>
     <div id="game-canvas">
@@ -21,10 +25,25 @@
       <p>You're a wizard, Harry!</p>
       <p>No Controllers connected.</p>
       <p>Use WASD to move the wizard.</p>
+
+      <div id="example"></div>
     </aside>
 
     <script type="text/javascript">
       init();
+
+      var Hello = React.createClass({
+        displayName: 'Hello',
+        render: function() {
+          return React.createElement("div", null, "Hello ", this.props.name);
+        }
+      });
+
+      ReactDOM.render(
+        React.createElement(Hello, {name: "World"}),
+        document.getElementById('example')
+      );
+
     </script>
   </body>
 </html>

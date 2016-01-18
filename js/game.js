@@ -1,5 +1,6 @@
 var keyboard = new THREEx.KeyboardState();
 var gamepad = new THREEx.GamepadState();
+var input = new THREEx.InputState();
 var scene = new THREE.Scene();
 var width = window.innerWidth;
 var height = window.innerHeight;
