@@ -37,6 +37,7 @@ function initGame() {
   rectShape.lineTo( rectLength, rectWidth );
   rectShape.lineTo( rectLength, 0 );
   rectShape.lineTo( 0, 0 );
+  
 
 
   var group = new THREE.Group();
@@ -70,7 +71,7 @@ function initGame() {
   }
   {
 
-    var texture = imageLoader.createSprite("tilesheet.png", 256, 512, 170, 100);
+    var texture = imageLoader.createSprite("tilesheet.png", 330, 372, 170, 100);
 
 
     var material = new THREE.MeshBasicMaterial( {
@@ -105,6 +106,7 @@ function initGame() {
   
 
   render();
+
 }
 
 // cube.position.z = 3;
@@ -314,9 +316,12 @@ function ImageLoader(imageFilenames){
   this.createSprite = function (filename, width, height, offset_x, offset_y){
     var image = this.image(filename);
     var canvas = document.createElement('canvas');
+    canvas.setAttribute('width', width);
+    canvas.setAttribute('height', height);
     var ctx = canvas.getContext('2d');
     var dataTexture, data;
 
+    console.log(image);
       
     ctx.drawImage(image, offset_x, offset_y, width, height, 0, 0, width, height);
     data = ctx.getImageData(0, 0, width, height);
@@ -325,6 +330,7 @@ function ImageLoader(imageFilenames){
     dataTexture = new THREE.DataTexture(new Uint8Array(data.data.buffer), width, height, THREE.RGBAFormat);
     dataTexture.flipY = true;
     dataTexture.needsUpdate = true;
+    dataTexture.wrapS = dataTexture.wrapT = THREE.ClampToEdgeWrapping;
     return dataTexture;
   }
 
