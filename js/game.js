@@ -123,9 +123,10 @@ function render() {
   for(index in world){
     if (world[index].mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
       continue;
-    cameraPosition.x += (world[index].mesh.position.x * world[index].cameraGravity) / sumIntensity;
-    cameraPosition.y += (world[index].mesh.position.y * world[index].cameraGravity) / sumIntensity;
+    cameraPosition.add(world[index].getCameraGravity());
   }
+
+  cameraPosition.divideScalar(sumIntensity);
 
   if (cameraLocationTest){
     cameraLocationTest.position.x = cameraPosition.x;
@@ -150,8 +151,6 @@ function Player(){
   this.animatedTexture;
   this.mesh;
   this.speed = 2.0;
-  this.cameraGravity = 10;
-
   this.update = function(dt){
     if (!this.mesh)
       return;
@@ -182,6 +181,11 @@ function Player(){
       this.animatedTexture.update(dt);
     }
 
+  }
+
+  this.cameraGravity = 10;
+  this.getCameraGravity = function(){
+    return new THREE.Vector2(this.mesh.position.x * this.cameraGravity, this.mesh.position.y * this.cameraGravity);
   }
 }
 
@@ -262,7 +266,11 @@ function House(texture, mesh, x, y){
   this.mesh.scale.y = 5;
   this.mesh.position.x = x;
   this.mesh.position.y = y;
+
   this.cameraGravity = 3;
+  this.getCameraGravity = function(){
+    return new THREE.Vector2((this.mesh.position.x + 2.5) * this.cameraGravity, (this.mesh.position.y + 2.5) * this.cameraGravity);
+  }
 }
 
 
