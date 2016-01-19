@@ -185,7 +185,25 @@ function Player(){
 
   this.cameraGravity = 10;
   this.getCameraGravity = function(){
-    return new THREE.Vector2(this.mesh.position.x * this.cameraGravity, this.mesh.position.y * this.cameraGravity);
+    var velocity = new THREE.Vector2(0, 0);
+    switch (this.currentDirection) { //future ronald, think of a better solution for this.
+      case 0:
+        velocity.y += 1;
+        break;
+      case 1:
+        velocity.x -= 1;
+        break;
+      case 2:
+        velocity.y -= 1;
+        break;
+      case 3:
+        velocity.x += 1;
+        break;
+    }
+    
+    velocity.multiplyScalar(this.speed);
+    velocity.add(this.mesh.position);
+    return new THREE.Vector2(velocity.x * this.cameraGravity, velocity.y * this.cameraGravity);
   }
 }
 
