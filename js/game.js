@@ -46,17 +46,10 @@ function initGame() {
 
   {
 
-    //var texture = imageLoader.createSprite("wizard.png", 64, 64, 0, 0);
-    var texture = new THREE.Texture();
-    texture.image = imageLoader.image("wizard.png");
-    texture.needsUpdate = true;
-
-    console.log(texture);
+    var texture = imageLoader.createSprite("wizard.png", 468, 780, 0, 0);
     var material = new THREE.MeshBasicMaterial( {
       map: texture
     } );
-    //var material = new THREE.MeshBasicMaterial( { color: 0x0000ff } )
-
     player.animatedTexture = new AnimatedTexture(texture);
 
     var rectGeom = new THREE.ShapeGeometry( rectShape );
@@ -69,8 +62,8 @@ function initGame() {
     world[world.length] = player;
 
   }
-  {
 
+  {
     var texture = imageLoader.createSprite("tilesheet.png", 330, 372, 170, 100);
 
 
@@ -83,17 +76,17 @@ function initGame() {
     var newHouse = new House(texture, mesh, 10, -1);
     group.add(newHouse.mesh);
     world[world.length] = newHouse;
-
   }
 
   {
+    var texture = imageLoader.createSprite("tilesheet.png", 42, 57, 243, 3);
+    var material = new THREE.MeshBasicMaterial( {
+      map: texture
+    } );
 
-
-    var material = new THREE.MeshBasicMaterial( { color: 0xff00ff } )
     var rectGeom = new THREE.ShapeGeometry(rectShape );
     cameraLocationTest = new THREE.Mesh( rectGeom, material ) ;
     group.add(cameraLocationTest);
-
   }
 
   
@@ -321,11 +314,8 @@ function ImageLoader(imageFilenames){
     var ctx = canvas.getContext('2d');
     var dataTexture, data;
 
-    console.log(image);
-      
     ctx.drawImage(image, offset_x, offset_y, width, height, 0, 0, width, height);
     data = ctx.getImageData(0, 0, width, height);
-    console.log(data);
 
     dataTexture = new THREE.DataTexture(new Uint8Array(data.data.buffer), width, height, THREE.RGBAFormat);
     dataTexture.flipY = true;
@@ -334,43 +324,4 @@ function ImageLoader(imageFilenames){
     return dataTexture;
   }
 
-
-
 }
-
-//function TileSheet(filename){
-//  this.texture;
-//  this.material;
-//  this.isLoaded = false;
-//
-//  this.image = new Image();
-//  this.image.src = 'images/' + filename;
-//
-//  //loader.load('images/' + filename, function(texture){
-//  //  this.material = new THREE.MeshBasicMaterial( {
-//  //    map: texture
-//  //  } );
-//  //  this.texture = texture;
-//  //});
-//  //
-//  this.loaded = function(){
-//    tileSheet.createSprite(64,64,0, 0);
-//  }
-//
-//  this.image.onload = this.loaded;
-//
-//  this.createSprite = function(width, height, offset_x, offset_y){
-//    var canvas = document.createElement('canvas'),
-//      ctx = canvas.getContext('2d'),
-//      width = this.image.width,
-//      height = this.image.height,
-//      finalData, data;
-//
-//    ctx.drawImage(this.image, offset_x, offset_y, width, height);
-//    this.texture = new THREE.Texture(canvas);
-//    
-//    //finalData = ctx.getImageData(0, 0, width, height);
-//    //finalData.data;
-//
-//  }
-//}
