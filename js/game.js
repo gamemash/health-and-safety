@@ -223,8 +223,8 @@ function AnimatedTexture(texture){
   this.currentColumn = 0;
   this.numberOfColumns = 6;
   this.numberOfRows = 10;
-  texture.repeat.set(1.0 / this.numberOfColumns, 1.0 / this.numberOfRows);
-  texture.offset.y = this.currentRow / this.numberOfRows;
+  texture.repeat.set(texture.PowerOf2Factor.x / this.numberOfColumns, texture.PowerOf2Factor.y / this.numberOfRows);
+  texture.offset.y = this.currentRow * texture.PowerOf2Factor.y / this.numberOfRows;
   texture.wrapS =  texture.wrapT = THREE.RepeatWrapping;
   this.timeSinceAnimation = 0.0;
   this.direction = 1;
@@ -234,11 +234,11 @@ function AnimatedTexture(texture){
     this.timeSinceAnimation += dt;
 
     if (this.direction == -1){
-      texture.repeat.x = -1.0 / this.numberOfColumns;
-      texture.offset.x = (this.currentColumn + 1) / this.numberOfColumns;
+      texture.repeat.x = -texture.PowerOf2Factor.x / this.numberOfColumns;
+      texture.offset.x = (this.currentColumn + 1) * texture.PowerOf2Factor.x / this.numberOfColumns;
     } else {
-      texture.repeat.x = 1.0 / this.numberOfColumns;
-      texture.offset.x = this.currentColumn / this.numberOfColumns;
+      texture.repeat.x = texture.PowerOf2Factor.x / this.numberOfColumns;
+      texture.offset.x = this.currentColumn * texture.PowerOf2Factor.x / this.numberOfColumns;
     }
 
     if (this.timeSinceAnimation > 0.1){
@@ -258,8 +258,8 @@ function AnimatedTexture(texture){
 
     if (oldRow != this.currentRow){
       this.currentColumn = this.currentColumn % this.textureMap[this.currentRow];
-      texture.offset.x = this.currentColumn / this.numberOfColumns;
-      texture.offset.y = this.currentRow / this.numberOfRows;
+      texture.offset.x = this.currentColumn  * texture.PowerOf2Factor.x / this.numberOfColumns;
+      texture.offset.y = this.currentRow * texture.PowerOf2Factor.y / this.numberOfRows;
     }
   };
 }
@@ -325,19 +325,29 @@ function ImageLoader(imageFilenames){
   this.createSprite = function (filename, width, height, offset_x, offset_y){
     var image = this.image(filename);
     var canvas = document.createElement('canvas');
-    canvas.setAttribute('width', width);
-    canvas.setAttribute('height', height);
+    var nWidth = ImageLoader.NextPowerOf2(width),
+       nHeight = ImageLoader.NextPowerOf2(height);
+    canvas.setAttribute('width', nWidth);
+    canvas.setAttribute('height', nHeight);
     var ctx = canvas.getContext('2d');
     var dataTexture, data;
 
-    ctx.drawImage(image, offset_x, offset_y, width, height, 0, 0, width, height);
-    data = ctx.getImageData(0, 0, width, height);
+    ctx.drawImage(image, offset_x, offset_y, width, height, 0, nHeight - height, width, height);
+    data = ctx.getImageData(0, 0, nWidth, nHeight);
 
-    dataTexture = new THREE.DataTexture(new Uint8Array(data.data.buffer), width, height, THREE.RGBAFormat);
+    dataTexture = new THREE.DataTexture(new Uint8Array(data.data.buffer), nWidth, nHeight, THREE.RGBAFormat);
+    dataTexture.PowerOf2Factor = new THREE.Vector2(width / nWidth, height / nHeight);
     dataTexture.flipY = true;
+    dataTexture.repeat.set(width / nWidth, height / nHeight);
+    dataTexture.wrapS = dataTexture.wrapT = THREE.RepeatWrapping;
     dataTexture.needsUpdate = true;
-    dataTexture.wrapS = dataTexture.wrapT = THREE.ClampToEdgeWrapping;
+
     return dataTexture;
   }
 
+  ImageLoader.NextPowerOf2 = function(value){
+    var n = 0;
+    while ((1 << n) < value) n++;
+    return 1 << n;
+  }
 }
