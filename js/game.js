@@ -2,13 +2,14 @@ var keyboard = new THREEx.KeyboardState();
 var scene = new THREE.Scene();
 var width = window.innerWidth;
 var height = window.innerHeight;
-var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
 var renderer = new THREE.WebGLRenderer({alpha: true});
+var camera;
+var rectShape;
 
 
 var currentDirection = 0;
 var speed = 10.0;
-var player = new Player();
+var player;
 var centerOfGravityCamera;
 var cameraLocationTest;
 var world = [];
@@ -31,7 +32,7 @@ function initGame() {
 
   var rectWidth = 1;
   var rectLength = 1;
-  var rectShape = new THREE.Shape();
+  rectShape = new THREE.Shape();
   rectShape.moveTo( 0,0 );
   rectShape.lineTo( 0, rectWidth );
   rectShape.lineTo( rectLength, rectWidth );
@@ -39,45 +40,28 @@ function initGame() {
   rectShape.lineTo( 0, 0 );
   
 
-
   var group = new THREE.Group();
 
-  var loader = new THREE.TextureLoader();
-
   {
-
-    var texture = imageLoader.createSprite("wizard.png", 468, 780, 0, 0);
-    var material = new THREE.MeshBasicMaterial( {
-      map: texture
-    } );
-    player.animatedTexture = new AnimatedTexture(texture);
-
-    var rectGeom = new THREE.ShapeGeometry( rectShape );
-    player.mesh = new THREE.Mesh( rectGeom, material ) ;
-    player.mesh.scale.x = 1;
-    player.mesh.scale.y = 1;
-    player.mesh.position.z = 1;
-
+    player = new Player();
     group.add(player.mesh);
     world[world.length] = player;
-
   }
 
   {
-    var texture = imageLoader.createSprite("tilesheet.png", 330, 372, 170, 100);
-
-
-    var material = new THREE.MeshBasicMaterial( {
-      map: texture
-    } );
-
-    var rectGeom = new THREE.ShapeGeometry(rectShape );
-    var mesh = new THREE.Mesh( rectGeom, material ) ;
-    var newHouse = new House(texture, mesh, 10, -1);
+    var newHouse = new House(-2, 1);
     group.add(newHouse.mesh);
     world[world.length] = newHouse;
   }
 
+  {
+    var newHouse = new House(12, 1);
+    group.add(newHouse.mesh);
+    world[world.length] = newHouse;
+  }
+
+
+  camera = new Camera();
   {
     var texture = imageLoader.createSprite("tilesheet.png", 42, 57, 243, 3);
     var material = new THREE.MeshBasicMaterial( {
@@ -90,13 +74,7 @@ function initGame() {
   }
 
   
-
   scene.add( group );
-
-  camera.position.z = 10;
-  centerOfGravityCamera = new CenterOfGravityCamera(camera);
-
-  
 
   render();
 
@@ -111,46 +89,74 @@ function render() {
     player.update(dt);
 
   var sumIntensity = 0.0;
-  for(index in world){
-    if (world[index].mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
-      continue;
-
-    sumIntensity += world[index].cameraGravity;
-  }
-
   var cameraPosition = new THREE.Vector2(0, 0);
 
   for(index in world){
     if (world[index].mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
       continue;
     cameraPosition.add(world[index].getCameraGravity());
+    sumIntensity += world[index].cameraGravity;
   }
 
   cameraPosition.divideScalar(sumIntensity);
 
-  if (cameraLocationTest){
-    cameraLocationTest.position.x = cameraPosition.x;
-    cameraLocationTest.position.y = cameraPosition.y;
+  if (cameraLocationTest){ //show the desired camera center in the world
+    cameraLocationTest.position.setX(cameraPosition.x); 
+    cameraLocationTest.position.setY(cameraPosition.y); 
   }
 
-  if (centerOfGravityCamera)
-    centerOfGravityCamera.update(cameraPosition, dt);
-  
-
-  //camera.position.x = cameraPosition.x;
-  //camera.position.y = cameraPosition.y;
-
+  if (camera)
+    camera.update(cameraPosition, dt);
 
   requestAnimationFrame( render );
-  renderer.render( scene, camera );
+  renderer.render( scene, camera.camera );
+}
+
+function House(x, y){
+  if(!House.texture)
+    House.texture = imageLoader.createSprite("tilesheet.png", 330, 372, 170, 100);
+
+  var material = new THREE.MeshBasicMaterial( {
+    map: House.texture,
+    transparent: true
+  } );
+
+  var rectGeom = new THREE.ShapeGeometry(rectShape );
+  this.mesh = new THREE.Mesh( rectGeom, material ) ;
+  this.mesh.scale.x = 5;
+  this.mesh.scale.y = 5;
+  this.position = this.mesh.position;
+  this.position.x = x;
+  this.position.y = y;
+
+
+  this.cameraGravity = 2;
+  this.getCameraGravity = function(){
+    return new THREE.Vector2((this.mesh.position.x + 2.5) * this.cameraGravity, (this.mesh.position.y + 2.5) * this.cameraGravity);
+  }
 }
 
 function Player(){
   this.currentDirection = 2; //"WASD" = 0123
   this.moving = false;
-  this.animatedTexture;
-  this.mesh;
   this.speed = 2.0;
+
+  if (!Player.texture){
+    Player.texture = imageLoader.createSprite("wizard.png", 468, 780, 0, 0);
+  }
+  var rectGeom = new THREE.ShapeGeometry( rectShape );
+  this.material = new THREE.MeshBasicMaterial( {
+    map: Player.texture,
+    transparent: true
+  } );
+  this.animatedTexture = new AnimatedTexture(Player.texture);
+  this.mesh = new THREE.Mesh( rectGeom, this.material );
+  this.position = this.mesh.position;
+  
+  this.position.z = 1;
+
+
+
   this.update = function(dt){
     if (!this.mesh)
       return;
@@ -183,7 +189,7 @@ function Player(){
 
   }
 
-  this.cameraGravity = 10;
+  this.cameraGravity = 20;
   this.getCameraGravity = function(){
     var velocity = new THREE.Vector2(0, 0);
     switch (this.currentDirection) { //future ronald, think of a better solution for this.
@@ -258,37 +264,21 @@ function AnimatedTexture(texture){
   };
 }
 
-function CenterOfGravityCamera(camera){
-  this.maxCameraSpeed = 5.0;
-  this.time = 0;
+
+function Camera(){
+  this.maxCameraSpeed = 20.0;
+  this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  this.camera.position.z = 10;
 
   this.update = function(newCenterOfGravity, dt){
-    this.time += dt;
-    var distance = newCenterOfGravity.distanceTo(camera.position);
+    var distance = newCenterOfGravity.distanceTo(this.camera.position);
     var factor = (1.0 - Math.exp(-distance / this.maxCameraSpeed)) * this.maxCameraSpeed;
 
-    var difference = newCenterOfGravity.sub(camera.position);
+    var difference = newCenterOfGravity.sub(this.camera.position);
     var velocity = difference.normalize().multiplyScalar(factor);
-    camera.position.x += velocity.x * dt;
-    camera.position.y += velocity.y * dt;
-
-
+    this.camera.position.x += velocity.x * dt;
+    this.camera.position.y += velocity.y * dt;
   };
-
-}
-
-
-function House(texture, mesh, x, y){
-  this.mesh = mesh;
-  this.mesh.scale.x = 5;
-  this.mesh.scale.y = 5;
-  this.mesh.position.x = x;
-  this.mesh.position.y = y;
-
-  this.cameraGravity = 3;
-  this.getCameraGravity = function(){
-    return new THREE.Vector2((this.mesh.position.x + 2.5) * this.cameraGravity, (this.mesh.position.y + 2.5) * this.cameraGravity);
-  }
 }
 
 
