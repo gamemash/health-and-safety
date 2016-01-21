@@ -361,8 +361,10 @@ function Camera(){
 
     var difference = newCenterOfGravity.sub(this.camera.position);
     var velocity = difference.normalize().multiplyScalar(factor);
-    this.camera.position.x += velocity.x * dt;
-    this.camera.position.y += velocity.y * dt;
+    if (velocity.length() > 0.22){
+      this.camera.position.x += velocity.x * dt;
+      this.camera.position.y += velocity.y * dt;
+    }
   };
 }
 
