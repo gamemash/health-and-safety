@@ -1,6 +1,4 @@
-var keyboard = new THREEx.KeyboardState();
-var gamepad = new THREEx.GamepadState();
-// var input = new THREEx.InputState();
+var input = new THREEx.InputState();
 var scene = new THREE.Scene();
 var width = window.innerWidth;
 var height = window.innerHeight;
@@ -166,74 +164,33 @@ function Player(){
     if (!this.mesh)
       return;
 
-    if (gamepad.pressed(0)) {
-      console.log('X');
-    }
-
-    if (gamepad.pressed(1)) {
-      console.log('O');
-    }
-
-    if (gamepad.pressed(2)) {
-      console.log('Square');
-    }
-
-    if (gamepad.pressed(3)) {
-      console.log('Triangle');
-    }
-
-    if (gamepad.pressed(13)) {
+    if (input.pressed('down')) {
       // down
       this.moving = true;
       this.currentDirection = 2;
       this.mesh.position.y -= this.speed * dt;
     }
 
-    if (gamepad.pressed(14)) {
+    if (input.pressed('left')) {
       // left
       this.moving = true;
       this.currentDirection = 1;
       this.mesh.position.x -= this.speed * dt;
     }
 
-    if (gamepad.pressed(15)) {
+    if (input.pressed('right')) {
       // right
       this.moving = true;
       this.currentDirection = 3;
       this.mesh.position.x += this.speed * dt;
     }
 
-    if (gamepad.pressed(12)) {
+    if (input.pressed('up')) {
       // up
       this.moving = true;
       this.currentDirection = 0;
       this.mesh.position.y += this.speed * dt;
     }
-
-    if (keyboard.pressed("W")){
-      this.moving = true;
-      this.currentDirection = 0;
-      this.mesh.position.y += this.speed * dt;
-    }
-
-    if (keyboard.pressed("A")){
-      this.moving = true;
-      this.currentDirection = 1;
-      this.mesh.position.x -= this.speed * dt;
-    }
-
-    if (keyboard.pressed("S")){
-      this.moving = true;
-      this.currentDirection = 2;
-      this.mesh.position.y -= this.speed * dt;
-    }
-
-    if (keyboard.pressed("D")){
-      this.moving = true;
-      this.currentDirection = 3;
-      this.mesh.position.x += this.speed * dt;
-    }
-
 
     if (this.animatedTexture){
       this.animatedTexture.selectRow(this.currentDirection, this.moving);
