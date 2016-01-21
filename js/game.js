@@ -152,7 +152,7 @@ function render() {
 function World(){
 
   var uniforms = {
-      texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 64, 64, 584, 343) },
+      texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 960, 4704, 0, 0) },
       chunkData: { type: "iv1", value: (new Int32Array(256)) }
   };
 
