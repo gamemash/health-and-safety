@@ -19,10 +19,41 @@ var viewCorrectionDistance = 10;
 var images = ["tilesheet.png", "wizard.png", "house.png"];
 var imageLoader;
 
+var shaders = ["world.frag", "world.vert"];
+var shaderLoader;
+var gameLoader;
+
 
 
 function init() {
-  imageLoader = new ImageLoader(images);
+  gameLoader = new GameLoader();
+  gameLoader.start();
+}
+
+function GameLoader(){
+  this.start = function(){
+    this.loadImages();
+  }
+
+  this.loadImages = function(){
+    console.log("Loading images");
+    imageLoader = new ImageLoader(images);
+  }
+
+  this.loadedImages = function(){
+    console.log("Done");
+    this.loadShaders();
+  }
+
+  this.loadShaders = function(){
+    console.log("Loading shaders");
+    shaderLoader = new ShaderLoader(shaders);
+  }
+
+  this.loadedShaders = function(){
+    console.log("Done, initializing game");
+    initGame();
+  }
 }
 
 function initGame() {
@@ -61,12 +92,18 @@ function initGame() {
     world[world.length] = newHouse;
   }
 
+  { 
+    var worldChunk = new World();
+    group.add(worldChunk.mesh);
+  }
+
 
   camera = new Camera();
   {
     var texture = imageLoader.createSprite("tilesheet.png", 42, 57, 243, 3);
     var material = new THREE.MeshBasicMaterial( {
-      map: texture
+      map: texture,
+      transparent: true
     } );
 
     var rectGeom = new THREE.ShapeGeometry(rectShape );
@@ -111,6 +148,51 @@ function render() {
 
   requestAnimationFrame( render );
   renderer.render( scene, camera.camera );
+}
+
+function World(){
+
+  var uniforms = {
+      texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 64, 64, 584, 343) },
+      chunkData: { type: "iv1", value: (new Int32Array(256)) }
+  };
+
+  var geometry = new THREE.BufferGeometry();
+  var material = new THREE.ShaderMaterial( {
+    uniforms: uniforms,
+    vertexShader: shaderLoader.get("world.vert"),
+    fragmentShader: shaderLoader.get("world.frag")
+  } );
+
+  var chunkSize = 16;
+
+  
+
+  var vertexPositions = [
+    [ 0.0,  0.0, -1.0],
+    [ 1.0,  0.0, -1.0],
+    [ 1.0,  1.0, -1.0],
+
+    [ 1.0,  1.0, -1.0],
+    [ 0.0,  1.0, -1.0],
+    [ 0.0,  0.0, -1.0]
+  ];
+  var vertices = new Float32Array( vertexPositions.length * 3 ); // three components per vertex
+
+  // components of the position vector for each vertex are stored
+  // contiguously in the buffer.
+  for ( var i = 0; i < vertexPositions.length; i++ )
+  {
+    vertices[ i*3 + 0 ] = vertexPositions[i][0] * chunkSize;
+    vertices[ i*3 + 1 ] = vertexPositions[i][1] * chunkSize;
+    vertices[ i*3 + 2 ] = vertexPositions[i][2] * chunkSize;
+  }
+
+// itemSize = 3 because there are 3 values (components) per vertex
+  //geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+  geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  geometry.computeBoundingBox();
+  this.mesh = new THREE.Mesh( geometry, material ) ;
 }
 
 function House(x, y){
@@ -281,8 +363,11 @@ function AnimatedTexture(texture){
 
 function Camera(){
   this.maxCameraSpeed = 20.0;
-  this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-  this.camera.position.z = 10;
+  //this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+  var ratio = window.innerWidth / window.innerHeight;
+  var width = 32;
+  var height = width / ratio;
+  this.camera = new THREE.OrthographicCamera( width / - 2, width / 2, height / 2, height / - 2, - 50, 1000 );
 
   this.update = function(newCenterOfGravity, dt){
     var distance = newCenterOfGravity.distanceTo(this.camera.position);
@@ -326,7 +411,7 @@ function ImageLoader(imageFilenames){
   this.loaded = function(index){
     this.numberLoaded++;
     if (this.numberLoaded == this.numberImages){
-      initGame();
+      gameLoader.loadedImages();
     }
     var filename = this.imageFilenames[index];
     this.images[filename].loaded = true;
@@ -364,4 +449,41 @@ function ImageLoader(imageFilenames){
     while ((1 << n) < value) n++;
     return 1 << n;
   }
+}
+
+function ShaderLoader(shadersList){
+  this.shadersList = shadersList;
+  this.n = 0;
+  this.shaders = {};
+
+  this.load = function(filename){
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = (function(shaderLoader) {
+      return function(){
+        if (xhttp.readyState == 4 && xhttp.status == 200)
+          shaderLoader.save(filename, xhttp.responseText);
+      }
+    })(this);
+    xhttp.open("GET", "shaders/" + filename, true);
+    xhttp.send();
+  }
+
+  for(index in shadersList){
+    this.load(shadersList[index]);
+  }
+
+
+  this.save = function(filename, content){
+    this.shaders[filename] = content;
+    this.n++;
+
+    if (this.n == shadersList.length)
+      gameLoader.loadedShaders();
+      //console.log("loaded all shaders");
+  }
+
+  this.get = function(filename){
+    return this.shaders[filename];
+  }
+
 }
