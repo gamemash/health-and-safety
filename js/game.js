@@ -151,13 +151,20 @@ function render() {
 
 function World(){
 
+  var uniforms = {
+      texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 64, 64, 584, 343) }
+  };
+
   var geometry = new THREE.BufferGeometry();
   var material = new THREE.ShaderMaterial( {
+    uniforms: uniforms,
     vertexShader: shaderLoader.get("world.vert"),
     fragmentShader: shaderLoader.get("world.frag")
   } );
 
   var chunkSize = 16;
+
+  
 
   var vertexPositions = [
     [ 0.0,  0.0, -1.0],
