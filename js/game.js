@@ -165,31 +165,35 @@ function Player(){
       return;
 
     if (input.pressed('down')) {
-      // down
       this.moving = true;
       this.currentDirection = 2;
       this.mesh.position.y -= this.speed * dt;
     }
 
     if (input.pressed('left')) {
-      // left
       this.moving = true;
       this.currentDirection = 1;
       this.mesh.position.x -= this.speed * dt;
     }
 
     if (input.pressed('right')) {
-      // right
       this.moving = true;
       this.currentDirection = 3;
       this.mesh.position.x += this.speed * dt;
     }
 
     if (input.pressed('up')) {
-      // up
       this.moving = true;
       this.currentDirection = 0;
       this.mesh.position.y += this.speed * dt;
+    }
+
+    if (input.pressed('action')) {
+      console.log('pew');
+    }
+
+    if (input.pressed('menu')) {
+      console.log("menu!")
     }
 
     if (this.animatedTexture){

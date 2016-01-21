@@ -11,14 +11,18 @@ THREEx.InputState  = function() {
     'up': 12,
     'down': 13,
     'left': 14,
-    'right': 15
+    'right': 15,
+    'action': 0,
+    'menu': 9
   }
 
   keyboardButtonmappings = {
     'up': "W",
     'down': "S",
     'left': "A",
-    'right': "D"
+    'right': "D",
+    'action': 'space',
+    'menu': 'enter'
   }
 }
 
