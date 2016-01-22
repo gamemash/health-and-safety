@@ -23,6 +23,7 @@ function Game() {
   var player;
   var world = new World();
   var viewCorrectionDistance = 10;
+  var group = new THREE.Group();
 
   this.init = function() {
     var gameLoader = new GameLoader();
@@ -34,13 +35,13 @@ function Game() {
     renderer.setSize( window.innerWidth, window.innerHeight );
     gameCanvas.appendChild( renderer.domElement );
 
-    var group = new THREE.Group();
 
     {
       player = new Player();
       group.add(player.mesh);
       world.addEntity(player);
     }
+
 
     {
       var newHouse = new House(-2, 1);
@@ -78,6 +79,13 @@ function Game() {
     scene.add( group );
 
     this.render();
+  }
+
+  this.addPlayer = function(){
+    var player = new Player();
+    group.add(player.mesh);
+    world.addEntity(player);
+    return player;
   }
 
   this.render = function() {
@@ -136,6 +144,7 @@ function GameLoader(){
   this.loadedShaders = function(){
     logger.debug("Done, initializing game");
     this.game.initGame();
+    this.game.connectToServer();
   }
 }
 

@@ -25,6 +25,7 @@ wsServer.on('request', function(request) {
 
   var player = new Player(makeid(), connection)
   var index = players.push(player) - 1;
+  player.connection.sendUTF(JSON.stringify( { type: "welcome", data: player.id } ));
 
   console.log((new Date()) + ' Connection from origin ' + request.origin + '.');
   console.log((new Date()) + ' Connection accepted. Player ID: ' + player.id);
