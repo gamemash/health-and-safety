@@ -13,7 +13,7 @@ void main(void) {
 
   //int chunkIndex = int(floor(coordinate.x) + floor(coordinate.y) * 16.0);
   //vec2 tileInfo = vec2(240.0, 1872.0); //offset x, offset y, width, height
-  vec2 tileInfo = texture2D(chunkData, floor(coordinate)).xy * textureSize;
+  vec2 tileInfo = texture2D(chunkData, floor(coordinate)).xy;
   tileInfo = vec2(tileInfo.x, spriteSize.y - tileInfo.y - tileSize);
   vec2 relativeCoordinate = coordinate - floor(coordinate);
   //vec2 actualTexCoord = (tileInfo.xy + tileInfo.zw * relativeCoordinate) / textureSize;

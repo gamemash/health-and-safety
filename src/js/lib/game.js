@@ -192,10 +192,10 @@ function Chunk(){
 
     var tileData = [];
     tileData[0] = [240, 1872, 0, 0];
-    tileData[0] = [Math.round(240/ 1024 * 255), Math.round(1872 / 8192 * 255)];
+    //tileData[0] = [Math.round(240/ 1024 * 255), Math.round(1872 / 8192 * 255)];
     console.log(tileData);
     var numberOfTiles = Chunk.setup.chunkSize * Chunk.setup.chunkSize;
-    var chunkData = new Uint8Array(numberOfTiles * 4);
+    var chunkData = new Float32Array(numberOfTiles * 4);
     var chunkIndices = new Uint8Array(numberOfTiles);
     console.log(chunkData);
     for(var i = 0; i < numberOfTiles; i++){
@@ -204,7 +204,7 @@ function Chunk(){
       chunkData[i * 4 + 2] = 0.0;
       chunkData[i * 4 + 3] = 0.0;
     }
-    var dataTexture = new THREE.DataTexture(chunkData, 16, 16, THREE.RGBAFormat);
+    var dataTexture = new THREE.DataTexture(chunkData, 16, 16, THREE.RGBAFormat, THREE.FloatType);
     dataTexture.needsUpdate = true;
     console.log(chunkData);
 
