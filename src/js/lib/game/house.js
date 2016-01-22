@@ -21,7 +21,7 @@ function House(x, y){
   this.position.z = 1;
 
 
-  this.cameraGravity = 2;
+  this.cameraGravity = 12;
   this.getCameraGravity = function(){
     return new THREE.Vector2((this.mesh.position.x + 2.5) * this.cameraGravity, (this.mesh.position.y + 2.5) * this.cameraGravity);
   }

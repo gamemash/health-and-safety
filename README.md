@@ -34,7 +34,18 @@ Gamepad controlled character in the center of the screen
 Sprint 1
 --------
 
-Multiplayer
+  - Multiplayer
+    - Note passing
+      - players can drop a note on the world that other players can read
+
+    - Follow bloodborne model of multiplayer
+      - Request for help
+      - Available for help
+      - Set password
+
+    - Try to use firebase for coordination of requests/availables and notes in the gameworld
+    - Use freedom.js for actual game session
+
 
 Sprint 2
 --------

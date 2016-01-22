@@ -23,8 +23,6 @@ function Player(){
 
   this.position.z = 1;
 
-
-
   this.update = function(dt){
     this.moving = false;
 
@@ -67,10 +65,10 @@ function Player(){
       this.animatedTexture.selectRow(this.currentDirection, this.moving);
       this.animatedTexture.update(dt);
     }
-
   }
 
   this.cameraGravity = 20;
+
   this.getCameraGravity = function(){
     var velocity = new THREE.Vector2(0, 0);
     switch (this.currentDirection) { //future ronald, think of a better solution for this.

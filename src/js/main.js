@@ -12,6 +12,8 @@ log4js.configure({
   ]
 });
 
+// logger.setLevel('OFF');
+
 logger.info("Hi from main.js");
 
 var Game = require('./lib/game.js');
