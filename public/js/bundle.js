@@ -3990,7 +3990,7 @@ function render() {
 function World(){
 
   var uniforms = {
-      texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 64, 64, 584, 343) },
+      texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 960, 4704, 0, 0) },
       chunkData: { type: "iv1", value: (new Int32Array(256)) }
   };
 
@@ -4141,6 +4141,8 @@ function Player(){
     }
 
     velocity.multiplyScalar(this.speed);
+    if (this.moving)
+      velocity.multiplyScalar(3);
     velocity.add(this.mesh.position);
     return new THREE.Vector2(velocity.x * this.cameraGravity, velocity.y * this.cameraGravity);
   }
@@ -4212,8 +4214,10 @@ function Camera(){
 
     var difference = newCenterOfGravity.sub(this.camera.position);
     var velocity = difference.normalize().multiplyScalar(factor);
-    this.camera.position.x += velocity.x * dt;
-    this.camera.position.y += velocity.y * dt;
+    if (velocity.length() > 0.22){
+      this.camera.position.x += velocity.x * dt;
+      this.camera.position.y += velocity.y * dt;
+    }
   };
 }
 
@@ -4327,6 +4331,7 @@ function ShaderLoader(shadersList){
 
 
 module.exports = init;
+
 },{"../vendor/three.min.js":15,"./input_state.js":11,"log4js":6}],11:[function(require,module,exports){
 var keyboard = require('./input_state/keyboard.js');
 var gamepad = require('./input_state/gamepad.js');
