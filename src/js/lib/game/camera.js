@@ -2,6 +2,7 @@ var THREE = require('../../vendor/three.min.js');
 
 function Camera(){
   this.maxCameraSpeed = 20.0;
+  this.speedResponse = 8;
 
   var ratio = window.innerWidth / window.innerHeight;
   var width = 32;
@@ -10,7 +11,7 @@ function Camera(){
 
   this.update = function(newCenterOfGravity, dt){
     var distance = newCenterOfGravity.distanceTo(this.camera.position);
-    var factor = (1.0 - Math.exp(-distance / this.maxCameraSpeed)) * this.maxCameraSpeed;
+    var factor = (1.0 - Math.exp(-distance / this.maxCameraSpeed * this.speedResponse)) * this.maxCameraSpeed;
 
     var difference = newCenterOfGravity.sub(this.camera.position);
     var velocity = difference.normalize().multiplyScalar(factor);
