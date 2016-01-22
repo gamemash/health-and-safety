@@ -1,5 +1,7 @@
 var log4js = require('log4js');
 var logger = log4js.getLogger('[Game]');
+var World = require('./game/world.js');
+var ImageLoader = require('./game/image_loader.js')
 
 var THREE = require('../vendor/three.min.js');
 var input = require('./input_state.js');
@@ -25,7 +27,7 @@ var images = ["tilesheet.png", "wizard.png", "house.png"];
 var imageLoader;
 
 var shaders = ["world.frag", "world.vert"];
-var shaderLoader;
+var ShaderLoader = require('./game/shader_loader.js');
 var gameLoader;
 
 
@@ -42,7 +44,7 @@ function GameLoader(){
 
   this.loadImages = function(){
     logger.debug("Loading images");
-    imageLoader = new ImageLoader(images);
+    ImageLoader.load(images, this);
   }
 
   this.loadedImages = function(){
@@ -52,7 +54,7 @@ function GameLoader(){
 
   this.loadShaders = function(){
     logger.debug("Loading shaders");
-    shaderLoader = new ShaderLoader(shaders);
+    ShaderLoader.import(shaders, this);
   }
 
   this.loadedShaders = function(){
@@ -105,7 +107,7 @@ function initGame() {
 
   camera = new Camera();
   {
-    var texture = imageLoader.createSprite("tilesheet.png", 42, 57, 243, 3);
+    var texture = ImageLoader.createSprite("tilesheet.png", 42, 57, 243, 3);
     var material = new THREE.MeshBasicMaterial( {
       map: texture,
       transparent: true
@@ -156,122 +158,9 @@ function render() {
   renderer.render( scene, camera.camera );
 }
 
-function World(){
-    this.group = new THREE.Group();
-    this.entities = [];
-
-    this.loadChunks = function(){
-      //var chunk1 = new Chunk();
-      //chunk1.setPosition(-1, -1);
-      //this.group.add(chunk1.mesh);
-
-      var chunk2 = new Chunk();
-      chunk2.setPosition(0, 0);
-      this.group.add(chunk2.mesh);
-
-      //var chunk3 = new Chunk();
-      //chunk3.setPosition(0, -1);
-      //this.group.add(chunk3.mesh);
-
-      //var chunk4 = new Chunk();
-      //chunk4.setPosition(-1, 0);
-      //this.group.add(chunk4.mesh);
-      //console.log(this.group);
-    }
-
-    this.addEntity = function(entity){
-      this.entities[this.entities.length] = entity;
-    }
-}
-
-function Chunk(){
-  if (!Chunk.setup){
-
-    Chunk.setup = {};
-    Chunk.setup.chunkSize = 16;
-
-    Chunk.setup.tileData = [];
-    Chunk.setup.tileData[0] = [449,  494, 0, 0];
-    Chunk.setup.tileData[1] = [240, 1872, 0, 0];
-    Chunk.setup.tileData[2] = [864,  480, 0, 0];
-    Chunk.setup.tileData[3] = [0,   1169, 0, 0];
-
-    Chunk.setup.texture = imageLoader.createSprite("tilesheet.png", 960, 4704, 0, 0);
-
-    Chunk.setup.geometry = new THREE.BufferGeometry();
-
-    var vertexPositions = [
-      [ 0.0,  0.0, 0.0],
-      [ 1.0,  0.0, 0.0],
-      [ 1.0,  1.0, 0.0],
-
-      [ 1.0,  1.0, 0.0],
-      [ 0.0,  1.0, 0.0],
-      [ 0.0,  0.0, 0.0]
-    ];
-    var vertices = new Float32Array( vertexPositions.length * 3 ); // three components per vertex
-
-    for ( var i = 0; i < vertexPositions.length; i++ )
-    {
-      vertices[ i*3 + 0 ] = vertexPositions[i][0] * Chunk.setup.chunkSize;
-      vertices[ i*3 + 1 ] = vertexPositions[i][1] * Chunk.setup.chunkSize;
-      vertices[ i*3 + 2 ] = vertexPositions[i][2] * Chunk.setup.chunkSize;
-    }
-
-    Chunk.setup.geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    Chunk.setup.geometry.computeBoundingBox();
-  }
-
-
-  var numberOfTiles = Chunk.setup.chunkSize * Chunk.setup.chunkSize;
-
-  this.chunkData = new Float32Array(numberOfTiles * 4);
-  this.chunkIndices = new Uint8Array(numberOfTiles);
-  for (var i = 0; i < numberOfTiles; i++){
-    this.chunkIndices[i] = 1;
-  }
-  for(var i = 0; i < numberOfTiles; i++){
-    this.chunkData[i * 4 + 0] = Chunk.setup.tileData[this.chunkIndices[i]][0];
-    this.chunkData[i * 4 + 1] = Chunk.setup.tileData[this.chunkIndices[i]][1];
-    this.chunkData[i * 4 + 2] = Chunk.setup.tileData[0][0];
-    this.chunkData[i * 4 + 3] = Chunk.setup.tileData[0][1];
-    //this.chunkData[i * 4 + 2] = 0.0;
-    //this.chunkData[i * 4 + 3] = 0.0;
-  }
-  this.dataTexture = new THREE.DataTexture(this.chunkData, Chunk.setup.chunkSize, Chunk.setup.chunkSize, THREE.RGBAFormat, THREE.FloatType);
-  this.dataTexture.needsUpdate = true;
-
-  this.uniforms = {
-      texture1: { type: "t", value: Chunk.setup.texture },
-      chunkData: { type: "t", value: this.dataTexture }
-  };
-
-  this.material = new THREE.ShaderMaterial( {
-    uniforms: this.uniforms,
-    vertexShader: shaderLoader.get("world.vert"),
-    fragmentShader: shaderLoader.get("world.frag"),
-    transparent: true
-  } );
-
-  //Chunk.setup.material.needsUpdate = true;
-
-  this.scale = 1.5;
-  this.mesh = new THREE.Mesh( Chunk.setup.geometry, this.material ) ;
-  this.mesh.scale.x = this.scale;
-  this.mesh.scale.y = this.scale;
-
-  this.setPosition = function(x, y){
-    var pos = new THREE.Vector2(x,y);
-    this.chunkPosition = pos.clone();
-    pos.multiplyScalar(this.scale * Chunk.setup.chunkSize);
-    this.mesh.position.x = pos.x;
-    this.mesh.position.y = pos.y;
-  }
-}
-
 function House(x, y){
   if(!House.texture)
-    House.texture = imageLoader.createSprite("tilesheet.png", 324, 366, 183, 96);
+    House.texture = ImageLoader.createSprite("tilesheet.png", 324, 366, 183, 96);
 
   var material = new THREE.MeshBasicMaterial( {
     map: House.texture,
@@ -300,7 +189,7 @@ function Player(){
   this.speed = 2.0;
 
   if (!Player.texture){
-    Player.texture = imageLoader.createSprite("wizard.png", 468, 780, 0, 0);
+    Player.texture = ImageLoader.createSprite("wizard.png", 468, 780, 0, 0);
   }
   var rectGeom = new THREE.ShapeGeometry( rectShape );
   this.material = new THREE.MeshBasicMaterial( {
@@ -457,114 +346,5 @@ function Camera(){
     }
   };
 }
-
-
-function ImageLoader(imageFilenames){
-  this.numberLoaded = 0;
-  this.numberImages = imageFilenames.length;
-  this.imageFilenames = imageFilenames;
-  this.folder = "images/";
-  this.images = {};
-
-  for(index in this.imageFilenames){
-    var filename = this.imageFilenames[index];
-    var path = this.folder + filename;
-
-
-    var image = new Image();
-    image.src = path;
-    image.onload = (function(imageLoader, index){
-      return function(){
-        imageLoader.loaded(index);
-      }
-    })(this, index);
-
-    this.images[filename] = {
-      'filename': filename,
-      'loaded': false,
-      'image': image
-    }
-  }
-
-  this.loaded = function(index){
-    this.numberLoaded++;
-    if (this.numberLoaded == this.numberImages){
-      gameLoader.loadedImages();
-    }
-    var filename = this.imageFilenames[index];
-    this.images[filename].loaded = true;
-  }
-
-  this.image = function(filename){
-    return this.images[filename].image;
-  }
-
-  this.createSprite = function (filename, width, height, offset_x, offset_y){
-    var image = this.image(filename);
-    var canvas = document.createElement('canvas');
-    var nWidth = ImageLoader.NextPowerOf2(width),
-       nHeight = ImageLoader.NextPowerOf2(height);
-    canvas.setAttribute('width', nWidth);
-    canvas.setAttribute('height', nHeight);
-    var ctx = canvas.getContext('2d');
-    var dataTexture, data;
-
-    ctx.drawImage(image, offset_x, offset_y, width, height, 0, nHeight - height, width, height);
-    data = ctx.getImageData(0, 0, nWidth, nHeight);
-
-    dataTexture = new THREE.DataTexture(new Uint8Array(data.data.buffer), nWidth, nHeight, THREE.RGBAFormat);
-    dataTexture.PowerOf2Factor = new THREE.Vector2(width / nWidth, height / nHeight);
-    dataTexture.flipY = true;
-    dataTexture.repeat.set(width / nWidth, height / nHeight);
-    dataTexture.wrapS = dataTexture.wrapT = THREE.RepeatWrapping;
-    dataTexture.needsUpdate = true;
-
-    return dataTexture;
-  }
-
-  ImageLoader.NextPowerOf2 = function(value){
-    var n = 0;
-    while ((1 << n) < value) n++;
-    return 1 << n;
-  }
-}
-
-function ShaderLoader(shadersList){
-  this.shadersList = shadersList;
-  this.n = 0;
-  this.shaders = {};
-
-  this.load = function(filename){
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = (function(shaderLoader) {
-      return function(){
-        if (xhttp.readyState == 4 && xhttp.status == 200)
-          shaderLoader.save(filename, xhttp.responseText);
-      }
-    })(this);
-    xhttp.open("GET", "shaders/" + filename, true);
-    xhttp.send();
-  }
-
-  for(index in shadersList){
-    this.load(shadersList[index]);
-  }
-
-
-  this.save = function(filename, content){
-    this.shaders[filename] = content;
-    this.n++;
-
-    if (this.n == shadersList.length)
-      gameLoader.loadedShaders();
-      //console.log("loaded all shaders");
-  }
-
-  this.get = function(filename){
-    return this.shaders[filename];
-  }
-
-}
-
 
 module.exports = init;
