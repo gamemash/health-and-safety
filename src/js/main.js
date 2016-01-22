@@ -18,6 +18,7 @@ logger.info("Hi from main.js");
 
 var Game = require('./lib/game.js');
 var Client = require('./lib/client.js');
+var NetworkInput = require('./lib/network_input.js');
 
 window.Game = new Game;
 window.Game.connectToServer = function(){
@@ -31,17 +32,24 @@ Client.onwelcome = function(id){
 }
 
 Client.updatePlayerList = function(playerList){
+  console.log(playerList);
   for (index in playerList){
-    var newPlayerId = playerList[index];
+    var newPlayerId = playerList[index].id;
 
     if (newPlayerId == Client.id)
       continue;
     if (Client.players.indexOf(newPlayerId) == -1){
       console.log("A new player has arrived");
       Client.players.push(newPlayerId);
-      window.Game.addPlayer();
+      var newPlayer = window.Game.addPlayer(new NetworkInput());
     }
   }
 }
+
+setInterval(function() {
+  var position = window.Game.localPlayer.position;
+  Client.sendPositionUpdate(position.x, position.y);
+}, 3000)
+      
 
 

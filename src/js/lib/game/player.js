@@ -2,22 +2,21 @@ var ImageLoader = require('./image_loader.js');
 var AnimatedTexture = require('./animated_texture.js');
 var THREE = require('../../vendor/three.min.js');
 var rectShape = require('./rect_shape.js');
-var input = require('../input_state.js');
 
-function Player(){
+function Player(input){
   this.currentDirection = 2; //"WASD" = 0123
   this.moving = false;
   this.speed = 2.0;
+  this.input = input;
 
-  if (!Player.texture){
-    Player.texture = ImageLoader.createSprite("wizard.png", 468, 780, 0, 0);
-  }
+  this.texture = ImageLoader.createSprite("wizard.png", 468, 780, 0, 0);
   var rectGeom = new THREE.ShapeGeometry( rectShape );
   this.material = new THREE.MeshBasicMaterial( {
-    map: Player.texture,
+    map: this.texture,
     transparent: true
   } );
-  this.animatedTexture = new AnimatedTexture(Player.texture);
+
+  this.animatedTexture = new AnimatedTexture(this.texture);
   this.mesh = new THREE.Mesh( rectGeom, this.material );
   this.position = this.mesh.position;
 
@@ -29,35 +28,35 @@ function Player(){
     if (!this.mesh)
       return;
 
-    if (input.pressed('down')) {
+    if (this.input.pressed('down')) {
       this.moving = true;
       this.currentDirection = 2;
       this.mesh.position.y -= this.speed * dt;
     }
 
-    if (input.pressed('left')) {
+    if (this.input.pressed('left')) {
       this.moving = true;
       this.currentDirection = 1;
       this.mesh.position.x -= this.speed * dt;
     }
 
-    if (input.pressed('right')) {
+    if (this.input.pressed('right')) {
       this.moving = true;
       this.currentDirection = 3;
       this.mesh.position.x += this.speed * dt;
     }
 
-    if (input.pressed('up')) {
+    if (this.input.pressed('up')) {
       this.moving = true;
       this.currentDirection = 0;
       this.mesh.position.y += this.speed * dt;
     }
 
-    if (input.pressed('action')) {
+    if (this.input.pressed('action')) {
       // action
     }
 
-    if (input.pressed('menu')) {
+    if (this.input.pressed('menu')) {
       // menu
     }
 

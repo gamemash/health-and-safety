@@ -11,6 +11,7 @@ var Camera = require('./game/camera.js');
 var World = require('./game/world.js');
 var House = require('./game/house.js');
 var Player = require('./game/player.js')
+var LocalInput = require('./input_state.js');
 
 var images = ["tilesheet.png", "wizard.png", "house.png"];
 var shaders = ["world.frag", "world.vert"];
@@ -20,10 +21,11 @@ function Game() {
   var camera;
   var scene = new THREE.Scene();
   var renderer = new THREE.WebGLRenderer({alpha: true});
-  var player;
   var world = new World();
   var viewCorrectionDistance = 10;
   var group = new THREE.Group();
+  this.players = [];
+  this.localPlayer;
 
   this.init = function() {
     var gameLoader = new GameLoader();
@@ -36,12 +38,9 @@ function Game() {
     gameCanvas.appendChild( renderer.domElement );
 
 
-    {
-      player = new Player();
-      group.add(player.mesh);
-      world.addEntity(player);
-    }
-
+    console.log("init game");
+    console.log(this);
+    this.localPlayer = this.addPlayer(new LocalInput());
 
     {
       var newHouse = new House(-2, 1);
@@ -81,25 +80,27 @@ function Game() {
     this.render();
   }
 
-  this.addPlayer = function(){
-    var player = new Player();
+  this.addPlayer = function(input){
+    var player = new Player(input);
+    console.log(player);
     group.add(player.mesh);
     world.addEntity(player);
+    this.players.push(player);
     return player;
   }
 
   this.render = function() {
     var dt = 1.0 / 60.0;
 
-    if (player)
-      player.update(dt);
+    for(index in this.players)
+      this.players[index].update(dt);
 
     var sumIntensity = 0.0;
     var cameraPosition = new THREE.Vector2(0, 0);
 
     for(index in world.entities){
       var entity = world.entities[index];
-      if (entity.mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
+      if (entity.mesh.position.distanceTo(this.localPlayer.mesh.position) > viewCorrectionDistance)
         continue;
       cameraPosition.add(entity.getCameraGravity());
       sumIntensity += entity.cameraGravity;

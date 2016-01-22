@@ -23,6 +23,10 @@ function Client(){
     console.log("error:", error);
   }
 
+  this.sendPositionUpdate = function (x, y){
+    this.connection.send(JSON.stringify({type: "positionUpdate", data: {'id': this.id, 'x': x, 'y': y }}));
+  }
+
   this.onmessage = function (message) {
     var parsedData = JSON.parse(message.data);
     console.log(this);

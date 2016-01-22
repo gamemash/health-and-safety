@@ -34,4 +34,4 @@ InputState.prototype.pressed = function(button_id) {
 // Square => 2
 // Triangle => 3
 //
-module.exports = new InputState;
+module.exports = InputState;

@@ -31,11 +31,34 @@ wsServer.on('request', function(request) {
   console.log((new Date()) + ' Connection accepted. Player ID: ' + player.id);
 
   for (var i=0; i < players.length; i++) {
-    players[i].connection.sendUTF(JSON.stringify( { type: "playerList", data: players.map(function(x){ return x.id }) } ));
+    players[i].connection.sendUTF(JSON.stringify( { type: "playerList", data: players.map(function(x){ return { "id": x.id, "x": x.x, "y": x.y} }) } ));
   }
 
   connection.on('message', function(message) {
-    console.log((new Date()) + ' Received Message from ' + userName + ': ' + message.utf8Data);
+    var parsedData = JSON.parse(message.utf8Data);
+    console.log(parsedData);
+
+    var player;
+
+    for (var i=0; i < players.length; i++) {
+      if (players[i].connection === connection) {
+        player = players[i];
+        break;
+      }
+    }
+
+    switch(parsedData["type"]){
+      case "positionUpdate":
+        player.x = parsedData.data.x;
+        player.y = parsedData.data.y;
+        break;
+    }
+    //  case "playerList":
+    //    this.updatePlayerList(parsedData["data"]);
+    //    break;
+    //  default:
+    //    console.log("unhandled message: ", JSON.parse(message.data));
+    //    break;
   });
 
   connection.on('close', function() {
