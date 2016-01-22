@@ -5,20 +5,6 @@
     <title>Health and Safety</title>
     <link rel="stylesheet" type="text/css" href="css/base.css">
     <script src="js/bundle.js"></script>
-    <script src="http://cdn.peerjs.com/0.3/peer.js"></script>
-    <script>
-    var peer = new Peer('player1', {key: 'x98d21b9kaf9a4i'});
-    var conn = peer.connect('player2');
-
-    conn.on('open', function(){
-      console.log("OPEN")
-    });
-
-    conn.on('data', function(data){
-      console.log("DATA:", data);
-    });
-
-    </script>
     <!-- <script src="https://fb.me/react-0.14.6.min.js"></script> -->
     <!-- <script src="https://fb.me/react-dom-0.14.6.min.js"></script> -->
   </head>

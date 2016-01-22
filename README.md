@@ -34,6 +34,10 @@ Gamepad controlled character in the center of the screen
 Sprint 1
 --------
 
+  - World editor
+
+  - Collision detection
+
   - Multiplayer
     - Note passing
       - players can drop a note on the world that other players can read
@@ -44,13 +48,15 @@ Sprint 1
       - Set password
 
     - Try to use firebase for coordination of requests/availables and notes in the gameworld
-    - Use freedom.js for actual game session
+    - Use a node.js websocket server
 
 
 Sprint 2
 --------
 
-Starting zone that introduces a game mechanic
+  - Enemies & Combat
+
+  - Starting zone that introduces a game mechanic
 
 
 
