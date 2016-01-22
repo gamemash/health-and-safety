@@ -204,7 +204,7 @@ function World(){
 
 function House(x, y){
   if(!House.texture)
-    House.texture = imageLoader.createSprite("tilesheet.png", 330, 372, 170, 100);
+    House.texture = imageLoader.createSprite("tilesheet.png", 324, 366, 183, 96);
 
   var material = new THREE.MeshBasicMaterial( {
     map: House.texture,
