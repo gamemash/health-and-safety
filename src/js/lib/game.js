@@ -378,9 +378,8 @@ function Player(){
         break;
     }
 
-    velocity.multiplyScalar(this.speed);
-    if (this.moving)
-      velocity.multiplyScalar(3);
+    velocity.multiplyScalar(this.speed * 3);
+
     velocity.add(this.mesh.position);
     return new THREE.Vector2(velocity.x * this.cameraGravity, velocity.y * this.cameraGravity);
   }
