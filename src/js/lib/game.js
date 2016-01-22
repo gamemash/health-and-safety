@@ -198,6 +198,8 @@ function World(){
   geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
   geometry.computeBoundingBox();
   this.mesh = new THREE.Mesh( geometry, material ) ;
+  this.mesh.scale.x = 2;
+  this.mesh.scale.y = 2;
 }
 
 function House(x, y){
