@@ -168,6 +168,14 @@ function World(){
       var chunk2 = new Chunk();
       chunk2.setPosition(0, 0);
       this.group.add(chunk2.mesh);
+
+      var chunk3 = new Chunk();
+      chunk3.setPosition(0, -1);
+      this.group.add(chunk3.mesh);
+
+      var chunk4 = new Chunk();
+      chunk4.setPosition(-1, 0);
+      this.group.add(chunk4.mesh);
       console.log(this.group);
     }
 
