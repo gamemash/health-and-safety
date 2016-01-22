@@ -17,7 +17,7 @@ var speed = 10.0;
 var player;
 var centerOfGravityCamera;
 var cameraLocationTest;
-var world = [];
+var world = new World();
 var viewCorrectionDistance = 10;
 //var tileSheet = new TileSheet("tilesheet.png");
 
@@ -82,24 +82,24 @@ function initGame() {
   {
     player = new Player();
     group.add(player.mesh);
-    world[world.length] = player;
+    world.addEntity(player);
   }
 
   {
     var newHouse = new House(-2, 1);
     group.add(newHouse.mesh);
-    world[world.length] = newHouse;
+    world.addEntity(newHouse);
   }
 
   {
     var newHouse = new House(12, 1);
     group.add(newHouse.mesh);
-    world[world.length] = newHouse;
+    world.addEntity(newHouse);
   }
 
   {
-    var worldChunk = new World();
-    group.add(worldChunk.mesh);
+    world.loadChunks();
+    group.add(world.group);
   }
 
 
@@ -134,11 +134,12 @@ function render() {
   var sumIntensity = 0.0;
   var cameraPosition = new THREE.Vector2(0, 0);
 
-  for(index in world){
-    if (world[index].mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
+  for(index in world.entities){
+    var entity = world.entities[index];
+    if (entity.mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
       continue;
-    cameraPosition.add(world[index].getCameraGravity());
-    sumIntensity += world[index].cameraGravity;
+    cameraPosition.add(entity.getCameraGravity());
+    sumIntensity += entity.cameraGravity;
   }
 
   cameraPosition.divideScalar(sumIntensity);
@@ -156,50 +157,76 @@ function render() {
 }
 
 function World(){
+    this.group = new THREE.Group();
+    this.entities = [];
 
-  var uniforms = {
-      texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 960, 4704, 0, 0) },
-      chunkData: { type: "iv1", value: (new Int32Array(256)) }
-  };
+    this.loadChunks = function(){
+      var chunk1 = new Chunk();
+      chunk1.setPosition(-1, -1);
+      this.group.add(chunk1.mesh);
 
-  var geometry = new THREE.BufferGeometry();
-  var material = new THREE.ShaderMaterial( {
-    uniforms: uniforms,
-    vertexShader: shaderLoader.get("world.vert"),
-    fragmentShader: shaderLoader.get("world.frag")
-  } );
+      var chunk2 = new Chunk();
+      chunk2.setPosition(0, 0);
+      this.group.add(chunk2.mesh);
+      console.log(this.group);
+    }
 
-  var chunkSize = 16;
+    this.addEntity = function(entity){
+      this.entities[this.entities.length] = entity;
+    }
+}
 
+function Chunk(){
+  if (!Chunk.setup){
+    Chunk.setup = {};
+    Chunk.setup.uniforms = {
+        texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 960, 4704, 0, 0) },
+        chunkData: { type: "iv1", value: (new Int32Array(256)) }
+    };
 
+    Chunk.setup.geometry = new THREE.BufferGeometry();
+    Chunk.setup.material = new THREE.ShaderMaterial( {
+      uniforms: Chunk.setup.uniforms,
+      vertexShader: shaderLoader.get("world.vert"),
+      fragmentShader: shaderLoader.get("world.frag")
+    } );
 
-  var vertexPositions = [
-    [ 0.0,  0.0, -1.0],
-    [ 1.0,  0.0, -1.0],
-    [ 1.0,  1.0, -1.0],
+    Chunk.setup.chunkSize = 16;
 
-    [ 1.0,  1.0, -1.0],
-    [ 0.0,  1.0, -1.0],
-    [ 0.0,  0.0, -1.0]
-  ];
-  var vertices = new Float32Array( vertexPositions.length * 3 ); // three components per vertex
+    var vertexPositions = [
+      [ 0.0,  0.0, -1.0],
+      [ 1.0,  0.0, -1.0],
+      [ 1.0,  1.0, -1.0],
 
-  // components of the position vector for each vertex are stored
-  // contiguously in the buffer.
-  for ( var i = 0; i < vertexPositions.length; i++ )
-  {
-    vertices[ i*3 + 0 ] = vertexPositions[i][0] * chunkSize;
-    vertices[ i*3 + 1 ] = vertexPositions[i][1] * chunkSize;
-    vertices[ i*3 + 2 ] = vertexPositions[i][2] * chunkSize;
+      [ 1.0,  1.0, -1.0],
+      [ 0.0,  1.0, -1.0],
+      [ 0.0,  0.0, -1.0]
+    ];
+    var vertices = new Float32Array( vertexPositions.length * 3 ); // three components per vertex
+
+    for ( var i = 0; i < vertexPositions.length; i++ )
+    {
+      vertices[ i*3 + 0 ] = vertexPositions[i][0] * Chunk.setup.chunkSize;
+      vertices[ i*3 + 1 ] = vertexPositions[i][1] * Chunk.setup.chunkSize;
+      vertices[ i*3 + 2 ] = vertexPositions[i][2] * Chunk.setup.chunkSize;
+    }
+
+    Chunk.setup.geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    Chunk.setup.geometry.computeBoundingBox();
   }
 
-// itemSize = 3 because there are 3 values (components) per vertex
-  //geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-  geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-  geometry.computeBoundingBox();
-  this.mesh = new THREE.Mesh( geometry, material ) ;
-  this.mesh.scale.x = 2;
-  this.mesh.scale.y = 2;
+  this.scale = 2;
+  this.mesh = new THREE.Mesh( Chunk.setup.geometry, Chunk.setup.material ) ;
+  this.mesh.scale.x = this.scale;
+  this.mesh.scale.y = this.scale;
+
+  this.setPosition = function(x, y){
+    var pos = new THREE.Vector2(x,y);
+    this.chunkPosition = pos.clone();
+    pos.multiplyScalar(this.scale * Chunk.setup.chunkSize);
+    this.mesh.position.x = pos.x;
+    this.mesh.position.y = pos.y;
+  }
 }
 
 function House(x, y){
