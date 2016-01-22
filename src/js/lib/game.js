@@ -186,10 +186,32 @@ function World(){
 
 function Chunk(){
   if (!Chunk.setup){
+
     Chunk.setup = {};
+    Chunk.setup.chunkSize = 16;
+
+    var tileData = [];
+    tileData[0] = [240, 1872, 0, 0];
+    tileData[0] = [Math.round(240/ 1024 * 255), Math.round(1872 / 8192 * 255)];
+    console.log(tileData);
+    var numberOfTiles = Chunk.setup.chunkSize * Chunk.setup.chunkSize;
+    var chunkData = new Uint8Array(numberOfTiles * 4);
+    var chunkIndices = new Uint8Array(numberOfTiles);
+    console.log(chunkData);
+    for(var i = 0; i < numberOfTiles; i++){
+      chunkData[i * 4 + 0] = tileData[chunkIndices[i]][0];
+      chunkData[i * 4 + 1] = tileData[chunkIndices[i]][1];
+      chunkData[i * 4 + 2] = 0.0;
+      chunkData[i * 4 + 3] = 0.0;
+    }
+    var dataTexture = new THREE.DataTexture(chunkData, 16, 16, THREE.RGBAFormat);
+    dataTexture.needsUpdate = true;
+    console.log(chunkData);
+
+
     Chunk.setup.uniforms = {
         texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 960, 4704, 0, 0) },
-        chunkData: { type: "iv1", value: (new Int32Array(256)) }
+        chunkData: { type: "t", value: dataTexture } 
     };
 
     Chunk.setup.geometry = new THREE.BufferGeometry();
@@ -198,8 +220,6 @@ function Chunk(){
       vertexShader: shaderLoader.get("world.vert"),
       fragmentShader: shaderLoader.get("world.frag")
     } );
-
-    Chunk.setup.chunkSize = 16;
 
     var vertexPositions = [
       [ 0.0,  0.0, -1.0],
