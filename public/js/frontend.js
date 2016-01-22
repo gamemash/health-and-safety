@@ -16,5 +16,5 @@ connection.onerror = function (error) {
 };
 
 connection.onmessage = function (message) {
-  console.log("message: ", message.data);
+  console.log("message: ", JSON.parse(message.data)["type"]);
 };
