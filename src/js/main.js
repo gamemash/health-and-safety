@@ -16,4 +16,4 @@ logger.info("Hi from main.js");
 
 var Game = require('./lib/game.js');
 
-window.Game = Game;
+window.Game = new Game;

@@ -2,7 +2,7 @@ var THREE = require('../../vendor/three.min.js');
 
 function Camera(){
   this.maxCameraSpeed = 20.0;
-  // this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
   var ratio = window.innerWidth / window.innerHeight;
   var width = 32;
   var height = width / ratio;
