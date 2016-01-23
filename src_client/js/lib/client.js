@@ -32,6 +32,7 @@ function Client(){
   }
 
   this.onmessage = function (message) {
+    logger.debug("message", message.data)
     var parsedData = JSON.parse(message.data);
 
     switch(parsedData["type"]){
@@ -40,6 +41,9 @@ function Client(){
         break;
       case "playerList":
         this.updatePlayerList(parsedData["data"]);
+        break;
+      case "playerLeft":
+        this.playerLeft(parsedData.data.id)
         break;
       default:
         logger.warn("unhandled message: ", JSON.parse(message.data));

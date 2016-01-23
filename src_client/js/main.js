@@ -13,6 +13,7 @@ window.Game.connectToServer = function(){
 
 Client.onwelcome = function(id){
   Client.id = id;
+  window.Game.localPlayer.id = id;
 }
 
 Client.updatePlayerList = function(playerList){
@@ -25,8 +26,14 @@ Client.updatePlayerList = function(playerList){
       logger.info("A new player has arrived");
       Client.players.push(newPlayerId);
       var newPlayer = window.Game.addPlayer(new NetworkInput());
+      newPlayer.id = newPlayerId;
     }
   }
+}
+
+Client.playerLeft = function(player_id) {
+  logger.info("A player has left: " + player_id);
+  window.Game.removePlayer(player_id);
 }
 
 setInterval(function() {

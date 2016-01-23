@@ -84,6 +84,15 @@ function Game() {
     return player;
   }
 
+  this.removePlayer = function(id) {
+    for (var i=0; i < this.players.length; i++) {
+      if (this.players[i]["id"] === id) {
+        this.players.splice(i, 1);
+        break;
+      }
+    }
+  }
+
   this.render = function() {
     var dt = 1.0 / 60.0;
 

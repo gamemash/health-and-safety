@@ -68,8 +68,15 @@ function registerNewPlayer(connection) {
 }
 
 function broadcastPlayerList(){
+  broadcastToAll({
+    type: "playerList",
+    data: players.map(function(x){ return { "id": x.id, "x": x.x, "y": x.y}})
+  });
+}
+
+function broadcastToAll(message) {
   for (var i=0; i < players.length; i++) {
-    players[i].connection.sendUTF(JSON.stringify( { type: "playerList", data: players.map(function(x){ return { "id": x.id, "x": x.x, "y": x.y} }) } ));
+    players[i].connection.sendUTF(JSON.stringify( message ));
   }
 }
 
@@ -100,11 +107,19 @@ function handleMessage(message, connection) {
 
 function deregisterPlayer(connection) {
   // Remove player from array of players
+  var player;
+
   for (var i=0; i < players.length; i++) {
     if (players[i].connection === connection) {
       console.log((new Date()) + " Player " + players[i].id + " disconnected.");
+      player = players[i];
       players.splice(i, 1);
-      return;
+      break;
     }
   }
+
+  broadcastToAll({
+    type: "playerLeft",
+    data: { id: player.id }
+  })
 }
