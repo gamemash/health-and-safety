@@ -20,6 +20,20 @@ You can also type `make develop` to auto build the project as you code.
 The browser will open for you, and refresh as you change files.
 
 
+Multiplayer Server
+------------------
+
+The multiplayer server can be deployed to heroku.
+
+```
+heroku login
+cd src_server
+heroku create
+git push heroku master
+heroku ps:scale web=1
+```
+
+
 Sprint 0
 --------
 
