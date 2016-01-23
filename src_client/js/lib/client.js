@@ -1,5 +1,4 @@
-var log4js = require('log4js');
-var logger = log4js.getLogger('Client');
+var logger = require('./logger.js');
 
 window.WebSocket = window.WebSocket || window.MozWebSocket;
 
