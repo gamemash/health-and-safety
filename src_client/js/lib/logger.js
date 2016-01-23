@@ -13,4 +13,6 @@ log4js.configure({
   ]
 });
 
+// logger.setLevel("INFO");
+
 module.exports = logger;

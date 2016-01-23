@@ -1,5 +1,7 @@
 "use strict";
 
+commands = require("./commands.js")
+
 process.title = 'health-and-safety-world-server';
 
 var webSocketsServerPort = (process.env.PORT || 5000);
@@ -10,7 +12,7 @@ var clients = [];
 var players = [];
 
 var server = http.createServer(function(request, response) {
-  response.end('It Works!! Path Hit: ' + request.url);
+  response.end('Health and Safety Websocket server');
 });
 
 server.listen(webSocketsServerPort, function() {
@@ -21,57 +23,20 @@ var wsServer = new webSocketServer({
   httpServer: server
 });
 
+// A new connection
 wsServer.on('request', function(request) {
   var connection = request.accept(null, request.origin);
-
-  var player = new Player(makeid(), connection)
-  var index = players.push(player) - 1;
-  player.connection.sendUTF(JSON.stringify( { type: "welcome", data: player.id } ));
-
   console.log((new Date()) + ' Connection from origin ' + request.origin + '.');
-  console.log((new Date()) + ' Connection accepted. Player ID: ' + player.id);
 
-  for (var i=0; i < players.length; i++) {
-    players[i].connection.sendUTF(JSON.stringify( { type: "playerList", data: players.map(function(x){ return { "id": x.id, "x": x.x, "y": x.y} }) } ));
-  }
+  var player = registerNewPlayer(connection);
+  broadcastPlayerList();
 
   connection.on('message', function(message) {
-    var parsedData = JSON.parse(message.utf8Data);
-    console.log(parsedData);
-
-    var player;
-
-    for (var i=0; i < players.length; i++) {
-      if (players[i].connection === connection) {
-        player = players[i];
-        break;
-      }
-    }
-
-    switch(parsedData["type"]){
-      case "positionUpdate":
-        player.x = parsedData.data.x;
-        player.y = parsedData.data.y;
-        break;
-    }
-    //  case "playerList":
-    //    this.updatePlayerList(parsedData["data"]);
-    //    break;
-    //  default:
-    //    console.log("unhandled message: ", JSON.parse(message.data));
-    //    break;
+    handleMessage(message, connection);
   });
 
   connection.on('close', function() {
-    console.log((new Date()) + " Player " + player.id + " disconnected.");
-
-    // Remove player from array of players
-    for (var i=0; i < players.length; i++) {
-      if (players[i].connection === connection) {
-        players.splice(i, 1);
-        return;
-      }
-    }
+    deregisterPlayer(connection);
   });
 });
 
@@ -90,4 +55,56 @@ function makeid(){
     text += possible.charAt(Math.floor(Math.random() * possible.length));
 
   return text;
+}
+
+function registerNewPlayer(connection) {
+  var player = new Player(makeid(), connection)
+  var index = players.push(player) - 1;
+
+  console.log((new Date()) + ' Player registered. Player ID: ' + player.id);
+
+  player.connection.sendUTF(JSON.stringify( { type: "welcome", data: player.id } ));
+  return player;
+}
+
+function broadcastPlayerList(){
+  for (var i=0; i < players.length; i++) {
+    players[i].connection.sendUTF(JSON.stringify( { type: "playerList", data: players.map(function(x){ return { "id": x.id, "x": x.x, "y": x.y} }) } ));
+  }
+}
+
+function handleMessage(message, connection) {
+  var parsedData = JSON.parse(message.utf8Data);
+  console.log("message: ", parsedData);
+
+  var player;
+
+  for (var i=0; i < players.length; i++) {
+    if (players[i].connection === connection) {
+      player = players[i];
+      break;
+    }
+  }
+
+  if (!player) {
+    console.log("Couldn't find a player for this connection")
+    return;
+  }
+
+  if (commands[parsedData["type"]]) {
+    commands[parsedData["type"]](player, parsedData);
+  } else {
+    console.log("Unknown command received: ", commands[parsedData["type"]])
+  };
+}
+
+function deregisterPlayer(connection) {
+  // Remove player from array of players
+  for (var i=0; i < players.length; i++) {
+    if (players[i].connection === connection) {
+      console.log((new Date()) + " Player " + players[i].id + " disconnected.");
+      players.splice(i, 1);
+      return;
+    }
+  }
 }
