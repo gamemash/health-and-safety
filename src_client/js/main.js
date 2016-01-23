@@ -27,12 +27,9 @@ window.Game.connectToServer = function(){
 
 Client.onwelcome = function(id){
   Client.id = id;
-  console.log("my id is", id);
-  //window.Game.addPlayer();
 }
 
 Client.updatePlayerList = function(playerList){
-  console.log(playerList);
   for (index in playerList){
     var newPlayerId = playerList[index].id;
 
@@ -50,6 +47,6 @@ setInterval(function() {
   var position = window.Game.localPlayer.position;
   Client.sendPositionUpdate(position.x, position.y);
 }, 3000)
-      
+
 
 

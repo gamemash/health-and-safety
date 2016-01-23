@@ -29,7 +29,6 @@ function Client(){
 
   this.onmessage = function (message) {
     var parsedData = JSON.parse(message.data);
-    console.log(this);
 
     switch(parsedData["type"]){
       case "welcome":

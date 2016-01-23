@@ -37,9 +37,6 @@ function Game() {
     renderer.setSize( window.innerWidth, window.innerHeight );
     gameCanvas.appendChild( renderer.domElement );
 
-
-    console.log("init game");
-    console.log(this);
     this.localPlayer = this.addPlayer(new LocalInput());
 
     {
@@ -82,7 +79,6 @@ function Game() {
 
   this.addPlayer = function(input){
     var player = new Player(input);
-    console.log(player);
     group.add(player.mesh);
     world.addEntity(player);
     this.players.push(player);

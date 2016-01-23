@@ -28,7 +28,6 @@ function ShaderLoader(){
 
     if (this.n == this.shadersList.length)
       this.listener.loadedShaders();
-      //console.log("loaded all shaders");
   }
 
   this.get = function(filename){

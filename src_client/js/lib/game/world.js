@@ -21,7 +21,6 @@ function World(){
       //var chunk4 = new Chunk();
       //chunk4.setPosition(-1, 0);
       //this.group.add(chunk4.mesh);
-      //console.log(this.group);
     }
 
     this.addEntity = function(entity){
