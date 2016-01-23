@@ -2,7 +2,7 @@
 
 process.title = 'health-and-safety-world-server';
 
-var webSocketsServerPort = 1337;
+var webSocketsServerPort = (process.env.PORT || 5000);
 
 var webSocketServer = require('websocket').server;
 var http = require('http');
@@ -10,6 +10,7 @@ var clients = [];
 var players = [];
 
 var server = http.createServer(function(request, response) {
+  response.end('It Works!! Path Hit: ' + request.url);
 });
 
 server.listen(webSocketsServerPort, function() {
