@@ -1,5 +1,5 @@
 var log4js = require('log4js');
-var logger = log4js.getLogger('[GamepadState]');
+var logger = log4js.getLogger('GamepadState');
 
 GamepadState  = function() {
   this.controllers = {};

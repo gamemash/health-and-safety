@@ -1,5 +1,5 @@
 var log4js = require('log4js');
-var logger = log4js.getLogger('[Game]');
+var logger = log4js.getLogger('Game');
 
 var THREE = require('../vendor/three.min.js');
 var rectShape = require('./game/rect_shape.js');

@@ -1,12 +1,13 @@
 var log4js = require('log4js');
-var logger = log4js.getLogger('[Main]');
+var logger = log4js.getLogger('Main');
 
 log4js.configure({
   appenders: [
     {
       type: 'console',
       layout: {
-        type: 'basic'
+        type: 'pattern',
+        pattern: "[%5.5p] - [%c] - %m%n"
       }
     }
   ]
@@ -36,7 +37,7 @@ Client.updatePlayerList = function(playerList){
     if (newPlayerId == Client.id)
       continue;
     if (Client.players.indexOf(newPlayerId) == -1){
-      console.log("A new player has arrived");
+      logger.info("A new player has arrived");
       Client.players.push(newPlayerId);
       var newPlayer = window.Game.addPlayer(new NetworkInput());
     }

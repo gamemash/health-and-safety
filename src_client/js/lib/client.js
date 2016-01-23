@@ -1,8 +1,11 @@
+var log4js = require('log4js');
+var logger = log4js.getLogger('Client');
+
 window.WebSocket = window.WebSocket || window.MozWebSocket;
 
 // if browser doesn't support WebSocket, just show some notification and exit
 if (!window.WebSocket) {
-  console.log("You dont support WebSockets, so we don't support you.");
+  logger.fatal("You dont support WebSockets, so we don't support you.");
 }
 
 function Client(){
@@ -16,11 +19,11 @@ function Client(){
   }
 
   this.onopen = function () {
-    console.log("open");
+    logger.info("Websocket opened");
   }
 
   this.onerror = function (error) {
-    console.log("error:", error);
+    logger.error("Websocket error", error);
   }
 
   this.sendPositionUpdate = function (x, y){
@@ -38,7 +41,7 @@ function Client(){
         this.updatePlayerList(parsedData["data"]);
         break;
       default:
-        console.log("unhandled message: ", JSON.parse(message.data));
+        logger.warn("unhandled message: ", JSON.parse(message.data));
         break;
     }
   }
