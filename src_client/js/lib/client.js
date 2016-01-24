@@ -13,7 +13,8 @@ function Client(){
 
 
   this.connect = function(){
-    this.connection = new WebSocket('ws://127.0.0.1:5000');
+    // this.connection = new WebSocket('ws://127.0.0.1:5000');
+    this.connection = new WebSocket('ws://calm-gorge-77884.herokuapp.com');
     this.connection.onmessage = this.onmessage.bind(this);
     this.connection.onopen = this.onopen.bind(this);
     this.connection.onerror = this.onerror.bind(this);

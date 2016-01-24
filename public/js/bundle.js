@@ -676,7 +676,7 @@ module.exports = {
 };
 
 }).call(this,require('_process'))
-},{"./date_format":3,"_process":21,"os":17,"util":23}],5:[function(require,module,exports){
+},{"./date_format":3,"_process":33,"os":29,"util":35}],5:[function(require,module,exports){
 "use strict";
 
 function Level(level, levelStr) {
@@ -1225,7 +1225,7 @@ configure();
 
 
 }).call(this,require('_process'))
-},{"./appenders/console":1,"./connect-logger":2,"./layouts":4,"./levels":5,"./logger":7,"_process":21,"async":8,"events":18,"fs":16,"path":20,"util":23}],7:[function(require,module,exports){
+},{"./appenders/console":1,"./connect-logger":2,"./layouts":4,"./levels":5,"./logger":7,"_process":33,"async":8,"events":30,"fs":28,"path":32,"util":35}],7:[function(require,module,exports){
 "use strict";
 var levels = require('./levels')
 , util = require('util')
@@ -1329,7 +1329,7 @@ exports.Logger = Logger;
 exports.disableAllLogWrites = disableAllLogWrites;
 exports.enableAllLogWrites = enableAllLogWrites;
 
-},{"./levels":5,"events":18,"util":23}],8:[function(require,module,exports){
+},{"./levels":5,"events":30,"util":35}],8:[function(require,module,exports){
 (function (process){
 /*global setImmediate: false, setTimeout: false, console: false */
 (function () {
@@ -2291,7 +2291,7 @@ exports.enableAllLogWrites = enableAllLogWrites;
 }());
 
 }).call(this,require('_process'))
-},{"_process":21}],9:[function(require,module,exports){
+},{"_process":33}],9:[function(require,module,exports){
 //     Underscore.js 1.8.2
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -3830,51 +3830,201 @@ exports.enableAllLogWrites = enableAllLogWrites;
 }.call(this));
 
 },{}],10:[function(require,module,exports){
-var log4js = require('log4js');
-var logger = log4js.getLogger('[Game]');
+var logger = require('./logger.js');
+
+window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+// if browser doesn't support WebSocket, just show some notification and exit
+if (!window.WebSocket) {
+  logger.fatal("You dont support WebSockets, so we don't support you.");
+}
+
+function Client(){
+  this.connection;
+  this.players = [];
+
+
+  this.connect = function(){
+    // this.connection = new WebSocket('ws://127.0.0.1:5000');
+    this.connection = new WebSocket('ws://calm-gorge-77884.herokuapp.com');
+    this.connection.onmessage = this.onmessage.bind(this);
+    this.connection.onopen = this.onopen.bind(this);
+    this.connection.onerror = this.onerror.bind(this);
+  }
+
+  this.onopen = function () {
+    logger.debug("Websocket opened");
+  }
+
+  this.onerror = function (error) {
+    logger.error("Websocket error", error);
+  }
+
+  this.sendPositionUpdate = function (x, y){
+    this.connection.send(JSON.stringify({type: "positionUpdate", data: {'id': this.id, 'x': x, 'y': y }}));
+  }
+
+  this.onmessage = function (message) {
+    // logger.debug("message", message.data)
+    var parsedData = JSON.parse(message.data);
+
+    switch(parsedData["type"]){
+      case "welcome":
+        this.onwelcome(parsedData["data"]);
+        break;
+      case "playerList":
+        this.updatePlayerList(parsedData["data"]);
+        break;
+      case "playerLeft":
+        this.playerLeft(parsedData.data.id)
+        break;
+      default:
+        logger.warn("unhandled message: ", JSON.parse(message.data));
+        break;
+    }
+  }
+
+}
+
+module.exports = new Client;
+
+},{"./logger.js":24}],11:[function(require,module,exports){
+var logger = require('./logger.js');
 
 var THREE = require('../vendor/three.min.js');
-var input = require('./input_state.js');
+var rectShape = require('./game/rect_shape.js');
 
-var scene = new THREE.Scene();
-var width = window.innerWidth;
-var height = window.innerHeight;
-var renderer = new THREE.WebGLRenderer({alpha: true});
-var camera;
-var rectShape;
+var ImageLoader = require('./game/image_loader.js');
+var ShaderLoader = require('./game/shader_loader.js');
 
-
-var currentDirection = 0;
-var speed = 10.0;
-var player;
-var centerOfGravityCamera;
-var cameraLocationTest;
-var world = [];
-var viewCorrectionDistance = 10;
-//var tileSheet = new TileSheet("tilesheet.png");
+var Camera = require('./game/camera.js');
+var World = require('./game/world.js');
+var House = require('./game/house.js');
+var Player = require('./game/player.js')
+var LocalInput = require('./input_state.js');
 
 var images = ["tilesheet.png", "wizard.png", "house.png"];
-var imageLoader;
-
 var shaders = ["world.frag", "world.vert"];
-var shaderLoader;
-var gameLoader;
+
+function Game() {
+  var cameraLocationTest;
+  var camera;
+  var scene = new THREE.Scene();
+  var renderer = new THREE.WebGLRenderer({alpha: true});
+  var world = new World();
+  var viewCorrectionDistance = 10;
+  var group = new THREE.Group();
+  this.players = [];
+  this.localPlayer;
+
+  this.init = function() {
+    var gameLoader = new GameLoader();
+    gameLoader.startLoading(this);
+  }
+
+  this.initGame = function() {
+    var gameCanvas = document.getElementById('game-canvas');
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    gameCanvas.appendChild( renderer.domElement );
+
+    this.localPlayer = this.addPlayer(new LocalInput());
+
+    {
+      var newHouse = new House(-2, 1);
+      group.add(newHouse.mesh);
+      world.addEntity(newHouse);
+    }
+
+    {
+      var newHouse = new House(12, 1);
+      group.add(newHouse.mesh);
+      world.addEntity(newHouse);
+    }
+
+    {
+      world.loadChunks();
+      group.add(world.group);
+    }
+
+    camera = new Camera();
+
+    {
+      var texture = ImageLoader.createSprite("tilesheet.png", 42, 57, 243, 3);
+      var material = new THREE.MeshBasicMaterial( {
+        map: texture,
+        transparent: true
+      } );
+
+      var rectGeom = new THREE.ShapeGeometry(rectShape );
+      cameraLocationTest = new THREE.Mesh( rectGeom, material ) ;
+
+      group.add(cameraLocationTest);
+    }
 
 
+    scene.add( group );
 
-function init() {
-  gameLoader = new GameLoader();
-  gameLoader.start();
+    this.render();
+  }
+
+  this.addPlayer = function(input){
+    var player = new Player(input);
+    group.add(player.mesh);
+    world.addEntity(player);
+    this.players.push(player);
+    return player;
+  }
+
+  this.removePlayer = function(id) {
+    for (var i=0; i < this.players.length; i++) {
+      if (this.players[i]["id"] === id) {
+        this.players.splice(i, 1);
+        break;
+      }
+    }
+  }
+
+  this.render = function() {
+    var dt = 1.0 / 60.0;
+
+    for(index in this.players)
+      this.players[index].update(dt);
+
+    var sumIntensity = 0.0;
+    var cameraPosition = new THREE.Vector2(0, 0);
+
+    for(index in world.entities){
+      var entity = world.entities[index];
+      if (entity.mesh.position.distanceTo(this.localPlayer.mesh.position) > viewCorrectionDistance)
+        continue;
+      cameraPosition.add(entity.getCameraGravity());
+      sumIntensity += entity.cameraGravity;
+    }
+
+    cameraPosition.divideScalar(sumIntensity);
+
+    if (cameraLocationTest){ //show the desired camera center in the world
+      cameraLocationTest.position.setX(cameraPosition.x);
+      cameraLocationTest.position.setY(cameraPosition.y);
+    }
+
+    if (camera)
+      camera.update(cameraPosition, dt);
+
+    requestAnimationFrame( this.render.bind(this) );
+    renderer.render( scene, camera.camera );
+  }
 }
 
 function GameLoader(){
-  this.start = function(){
+  this.startLoading = function(game){
     this.loadImages();
+    this.game = game;
   }
 
   this.loadImages = function(){
     logger.debug("Loading images");
-    imageLoader = new ImageLoader(images);
+    ImageLoader.load(images, this);
   }
 
   this.loadedImages = function(){
@@ -3884,269 +4034,20 @@ function GameLoader(){
 
   this.loadShaders = function(){
     logger.debug("Loading shaders");
-    shaderLoader = new ShaderLoader(shaders);
+    ShaderLoader.import(shaders, this);
   }
 
   this.loadedShaders = function(){
     logger.debug("Done, initializing game");
-    initGame();
+    this.game.initGame();
+    this.game.connectToServer();
   }
 }
 
-function initGame() {
-  var gameCanvas = document.getElementById('game-canvas');
-  renderer.setSize( window.innerWidth, window.innerHeight );
-  gameCanvas.appendChild( renderer.domElement );
+module.exports = Game;
 
-
-  var rectWidth = 1;
-  var rectLength = 1;
-  rectShape = new THREE.Shape();
-  rectShape.moveTo( 0,0 );
-  rectShape.lineTo( 0, rectWidth );
-  rectShape.lineTo( rectLength, rectWidth );
-  rectShape.lineTo( rectLength, 0 );
-  rectShape.lineTo( 0, 0 );
-
-
-  var group = new THREE.Group();
-
-  {
-    player = new Player();
-    group.add(player.mesh);
-    world[world.length] = player;
-  }
-
-  {
-    var newHouse = new House(-2, 1);
-    group.add(newHouse.mesh);
-    world[world.length] = newHouse;
-  }
-
-  {
-    var newHouse = new House(12, 1);
-    group.add(newHouse.mesh);
-    world[world.length] = newHouse;
-  }
-
-  {
-    var worldChunk = new World();
-    group.add(worldChunk.mesh);
-  }
-
-
-  camera = new Camera();
-  {
-    var texture = imageLoader.createSprite("tilesheet.png", 42, 57, 243, 3);
-    var material = new THREE.MeshBasicMaterial( {
-      map: texture,
-      transparent: true
-    } );
-
-    var rectGeom = new THREE.ShapeGeometry(rectShape );
-    cameraLocationTest = new THREE.Mesh( rectGeom, material ) ;
-    group.add(cameraLocationTest);
-  }
-
-
-  scene.add( group );
-
-  render();
-
-}
-
-// cube.position.z = 3;
-
-function render() {
-  var dt = 1.0 / 60.0;
-
-  if (player)
-    player.update(dt);
-
-  var sumIntensity = 0.0;
-  var cameraPosition = new THREE.Vector2(0, 0);
-
-  for(index in world){
-    if (world[index].mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
-      continue;
-    cameraPosition.add(world[index].getCameraGravity());
-    sumIntensity += world[index].cameraGravity;
-  }
-
-  cameraPosition.divideScalar(sumIntensity);
-
-  if (cameraLocationTest){ //show the desired camera center in the world
-    cameraLocationTest.position.setX(cameraPosition.x);
-    cameraLocationTest.position.setY(cameraPosition.y);
-  }
-
-  if (camera)
-    camera.update(cameraPosition, dt);
-
-  requestAnimationFrame( render );
-  renderer.render( scene, camera.camera );
-}
-
-function World(){
-
-  var uniforms = {
-      texture1: { type: "t", value: imageLoader.createSprite("tilesheet.png", 960, 4704, 0, 0) },
-      chunkData: { type: "iv1", value: (new Int32Array(256)) }
-  };
-
-  var geometry = new THREE.BufferGeometry();
-  var material = new THREE.ShaderMaterial( {
-    uniforms: uniforms,
-    vertexShader: shaderLoader.get("world.vert"),
-    fragmentShader: shaderLoader.get("world.frag")
-  } );
-
-  var chunkSize = 16;
-
-
-
-  var vertexPositions = [
-    [ 0.0,  0.0, -1.0],
-    [ 1.0,  0.0, -1.0],
-    [ 1.0,  1.0, -1.0],
-
-    [ 1.0,  1.0, -1.0],
-    [ 0.0,  1.0, -1.0],
-    [ 0.0,  0.0, -1.0]
-  ];
-  var vertices = new Float32Array( vertexPositions.length * 3 ); // three components per vertex
-
-  // components of the position vector for each vertex are stored
-  // contiguously in the buffer.
-  for ( var i = 0; i < vertexPositions.length; i++ )
-  {
-    vertices[ i*3 + 0 ] = vertexPositions[i][0] * chunkSize;
-    vertices[ i*3 + 1 ] = vertexPositions[i][1] * chunkSize;
-    vertices[ i*3 + 2 ] = vertexPositions[i][2] * chunkSize;
-  }
-
-// itemSize = 3 because there are 3 values (components) per vertex
-  //geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
-  geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
-  geometry.computeBoundingBox();
-  this.mesh = new THREE.Mesh( geometry, material ) ;
-}
-
-function House(x, y){
-  if(!House.texture)
-    House.texture = imageLoader.createSprite("tilesheet.png", 330, 372, 170, 100);
-
-  var material = new THREE.MeshBasicMaterial( {
-    map: House.texture,
-    transparent: true
-  } );
-
-  var rectGeom = new THREE.ShapeGeometry(rectShape );
-  this.mesh = new THREE.Mesh( rectGeom, material ) ;
-  this.mesh.scale.x = 5;
-  this.mesh.scale.y = 5;
-  this.position = this.mesh.position;
-  this.position.x = x;
-  this.position.y = y;
-
-
-  this.cameraGravity = 2;
-  this.getCameraGravity = function(){
-    return new THREE.Vector2((this.mesh.position.x + 2.5) * this.cameraGravity, (this.mesh.position.y + 2.5) * this.cameraGravity);
-  }
-}
-
-function Player(){
-  this.currentDirection = 2; //"WASD" = 0123
-  this.moving = false;
-  this.speed = 2.0;
-
-  if (!Player.texture){
-    Player.texture = imageLoader.createSprite("wizard.png", 468, 780, 0, 0);
-  }
-  var rectGeom = new THREE.ShapeGeometry( rectShape );
-  this.material = new THREE.MeshBasicMaterial( {
-    map: Player.texture,
-    transparent: true
-  } );
-  this.animatedTexture = new AnimatedTexture(Player.texture);
-  this.mesh = new THREE.Mesh( rectGeom, this.material );
-  this.position = this.mesh.position;
-
-  this.position.z = 1;
-
-
-
-  this.update = function(dt){
-    this.moving = false;
-
-    if (!this.mesh)
-      return;
-
-    if (input.pressed('down')) {
-      this.moving = true;
-      this.currentDirection = 2;
-      this.mesh.position.y -= this.speed * dt;
-    }
-
-    if (input.pressed('left')) {
-      this.moving = true;
-      this.currentDirection = 1;
-      this.mesh.position.x -= this.speed * dt;
-    }
-
-    if (input.pressed('right')) {
-      this.moving = true;
-      this.currentDirection = 3;
-      this.mesh.position.x += this.speed * dt;
-    }
-
-    if (input.pressed('up')) {
-      this.moving = true;
-      this.currentDirection = 0;
-      this.mesh.position.y += this.speed * dt;
-    }
-
-    if (input.pressed('action')) {
-      // action
-    }
-
-    if (input.pressed('menu')) {
-      // menu
-    }
-
-    if (this.animatedTexture){
-      this.animatedTexture.selectRow(this.currentDirection, this.moving);
-      this.animatedTexture.update(dt);
-    }
-
-  }
-
-  this.cameraGravity = 20;
-  this.getCameraGravity = function(){
-    var velocity = new THREE.Vector2(0, 0);
-    switch (this.currentDirection) { //future ronald, think of a better solution for this.
-      case 0:
-        velocity.y += 1;
-        break;
-      case 1:
-        velocity.x -= 1;
-        break;
-      case 2:
-        velocity.y -= 1;
-        break;
-      case 3:
-        velocity.x += 1;
-        break;
-    }
-
-    velocity.multiplyScalar(this.speed);
-    if (this.moving)
-      velocity.multiplyScalar(3);
-    velocity.add(this.mesh.position);
-    return new THREE.Vector2(velocity.x * this.cameraGravity, velocity.y * this.cameraGravity);
-  }
-}
+},{"../vendor/three.min.js":27,"./game/camera.js":13,"./game/house.js":15,"./game/image_loader.js":16,"./game/player.js":17,"./game/rect_shape.js":18,"./game/shader_loader.js":19,"./game/world.js":20,"./input_state.js":21,"./logger.js":24}],12:[function(require,module,exports){
+var THREE = require('../../vendor/three.min.js');
 
 function AnimatedTexture(texture){
   this.textureMap = [6, 6, 6, 4, 4, 4, 4, 4, 4, 4];
@@ -4199,10 +4100,13 @@ function AnimatedTexture(texture){
   };
 }
 
+module.exports = AnimatedTexture;
+},{"../../vendor/three.min.js":27}],13:[function(require,module,exports){
+var THREE = require('../../vendor/three.min.js');
 
 function Camera(){
   this.maxCameraSpeed = 20.0;
-  // this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
   var ratio = window.innerWidth / window.innerHeight;
   var width = 32;
   var height = width / ratio;
@@ -4221,38 +4125,168 @@ function Camera(){
   };
 }
 
+module.exports = Camera;
+},{"../../vendor/three.min.js":27}],14:[function(require,module,exports){
+var ImageLoader = require('./image_loader.js');
+var ShaderLoader = require('./shader_loader.js');
+var THREE = require('../../vendor/three.min.js');
 
-function ImageLoader(imageFilenames){
-  this.numberLoaded = 0;
-  this.numberImages = imageFilenames.length;
-  this.imageFilenames = imageFilenames;
-  this.folder = "images/";
-  this.images = {};
+function Chunk(){
+  if (!Chunk.setup){
 
-  for(index in this.imageFilenames){
-    var filename = this.imageFilenames[index];
-    var path = this.folder + filename;
+    Chunk.setup = {};
+    Chunk.setup.chunkSize = 16;
 
+    Chunk.setup.tileData = [];
+    Chunk.setup.tileData[0] = [449,  494, 0, 0];
+    Chunk.setup.tileData[1] = [240, 1872, 0, 0];
+    Chunk.setup.tileData[2] = [864,  480, 0, 0];
+    Chunk.setup.tileData[3] = [0,   1169, 0, 0];
 
-    var image = new Image();
-    image.src = path;
-    image.onload = (function(imageLoader, index){
-      return function(){
-        imageLoader.loaded(index);
-      }
-    })(this, index);
+    Chunk.setup.texture = ImageLoader.createSprite("tilesheet.png", 960, 4704, 0, 0);
 
-    this.images[filename] = {
-      'filename': filename,
-      'loaded': false,
-      'image': image
+    Chunk.setup.geometry = new THREE.BufferGeometry();
+
+    var vertexPositions = [
+      [ 0.0,  0.0, 0.0],
+      [ 1.0,  0.0, 0.0],
+      [ 1.0,  1.0, 0.0],
+
+      [ 1.0,  1.0, 0.0],
+      [ 0.0,  1.0, 0.0],
+      [ 0.0,  0.0, 0.0]
+    ];
+    var vertices = new Float32Array( vertexPositions.length * 3 ); // three components per vertex
+
+    for ( var i = 0; i < vertexPositions.length; i++ )
+    {
+      vertices[ i*3 + 0 ] = vertexPositions[i][0] * Chunk.setup.chunkSize;
+      vertices[ i*3 + 1 ] = vertexPositions[i][1] * Chunk.setup.chunkSize;
+      vertices[ i*3 + 2 ] = vertexPositions[i][2] * Chunk.setup.chunkSize;
     }
+
+    Chunk.setup.geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    Chunk.setup.geometry.computeBoundingBox();
+  }
+
+
+  var numberOfTiles = Chunk.setup.chunkSize * Chunk.setup.chunkSize;
+
+  this.chunkData = new Float32Array(numberOfTiles * 4);
+  this.chunkIndices = new Uint8Array(numberOfTiles);
+  for (var i = 0; i < numberOfTiles; i++){
+    this.chunkIndices[i] = 1;
+  }
+  for(var i = 0; i < numberOfTiles; i++){
+    this.chunkData[i * 4 + 0] = Chunk.setup.tileData[this.chunkIndices[i]][0];
+    this.chunkData[i * 4 + 1] = Chunk.setup.tileData[this.chunkIndices[i]][1];
+    this.chunkData[i * 4 + 2] = Chunk.setup.tileData[0][0];
+    this.chunkData[i * 4 + 3] = Chunk.setup.tileData[0][1];
+    //this.chunkData[i * 4 + 2] = 0.0;
+    //this.chunkData[i * 4 + 3] = 0.0;
+  }
+  this.dataTexture = new THREE.DataTexture(this.chunkData, Chunk.setup.chunkSize, Chunk.setup.chunkSize, THREE.RGBAFormat, THREE.FloatType);
+  this.dataTexture.needsUpdate = true;
+
+  this.uniforms = {
+      texture1: { type: "t", value: Chunk.setup.texture },
+      chunkData: { type: "t", value: this.dataTexture }
+  };
+
+  this.material = new THREE.ShaderMaterial( {
+    uniforms: this.uniforms,
+    vertexShader: ShaderLoader.get("world.vert"),
+    fragmentShader: ShaderLoader.get("world.frag"),
+    transparent: true
+  } );
+
+  //Chunk.setup.material.needsUpdate = true;
+
+  this.scale = 1.5;
+  this.mesh = new THREE.Mesh( Chunk.setup.geometry, this.material ) ;
+  this.mesh.scale.x = this.scale;
+  this.mesh.scale.y = this.scale;
+
+  this.setPosition = function(x, y){
+    var pos = new THREE.Vector2(x,y);
+    this.chunkPosition = pos.clone();
+    pos.multiplyScalar(this.scale * Chunk.setup.chunkSize);
+    this.mesh.position.x = pos.x;
+    this.mesh.position.y = pos.y;
+  }
+}
+
+module.exports = Chunk;
+},{"../../vendor/three.min.js":27,"./image_loader.js":16,"./shader_loader.js":19}],15:[function(require,module,exports){
+var ImageLoader = require('./image_loader.js');
+var THREE = require('../../vendor/three.min.js');
+var rectShape = require('./rect_shape.js');
+
+function House(x, y){
+  if(!House.texture)
+    House.texture = ImageLoader.createSprite("tilesheet.png", 324, 366, 183, 96);
+
+  var material = new THREE.MeshBasicMaterial( {
+    map: House.texture,
+    transparent: true
+  } );
+
+  var rectGeom = new THREE.ShapeGeometry(rectShape );
+  this.mesh = new THREE.Mesh( rectGeom, material ) ;
+  this.mesh.scale.x = 5;
+  this.mesh.scale.y = 5;
+  this.position = this.mesh.position;
+  this.position.x = x;
+  this.position.y = y;
+  this.position.z = 1;
+
+
+  this.cameraGravity = 12;
+  this.getCameraGravity = function(){
+    return new THREE.Vector2((this.mesh.position.x + 2.5) * this.cameraGravity, (this.mesh.position.y + 2.5) * this.cameraGravity);
+  }
+}
+
+module.exports = House;
+},{"../../vendor/three.min.js":27,"./image_loader.js":16,"./rect_shape.js":18}],16:[function(require,module,exports){
+var THREE = require('../../vendor/three.min.js');
+
+function ImageLoader(){
+
+  this.load = function(imageFilenames, listener) {
+    this.numberLoaded = 0;
+    this.numberImages = imageFilenames.length;
+    this.imageFilenames = imageFilenames;
+    this.folder = "images/";
+    this.listener = listener;
+    this.images = {};
+
+    for(index in this.imageFilenames){
+      var filename = this.imageFilenames[index];
+      var path = this.folder + filename;
+
+
+      var image = new Image();
+      image.src = path;
+      image.onload = (function(imageLoader, index){
+        return function(){
+          imageLoader.loaded(index);
+        }
+      })(this, index);
+
+      this.images[filename] = {
+        'filename': filename,
+        'loaded': false,
+        'image': image
+      }
+    }
+
   }
 
   this.loaded = function(index){
     this.numberLoaded++;
     if (this.numberLoaded == this.numberImages){
-      gameLoader.loadedImages();
+      this.listener.loadedImages();
     }
     var filename = this.imageFilenames[index];
     this.images[filename].loaded = true;
@@ -4292,10 +4326,129 @@ function ImageLoader(imageFilenames){
   }
 }
 
-function ShaderLoader(shadersList){
-  this.shadersList = shadersList;
-  this.n = 0;
-  this.shaders = {};
+module.exports = new ImageLoader;
+},{"../../vendor/three.min.js":27}],17:[function(require,module,exports){
+var ImageLoader = require('./image_loader.js');
+var AnimatedTexture = require('./animated_texture.js');
+var THREE = require('../../vendor/three.min.js');
+var rectShape = require('./rect_shape.js');
+
+function Player(input){
+  this.currentDirection = 2; //"WASD" = 0123
+  this.moving = false;
+  this.speed = 2.0;
+  this.input = input;
+
+  this.texture = ImageLoader.createSprite("wizard.png", 468, 780, 0, 0);
+  var rectGeom = new THREE.ShapeGeometry( rectShape );
+  this.material = new THREE.MeshBasicMaterial( {
+    map: this.texture,
+    transparent: true
+  } );
+
+  this.animatedTexture = new AnimatedTexture(this.texture);
+  this.mesh = new THREE.Mesh( rectGeom, this.material );
+  this.position = this.mesh.position;
+
+  this.position.z = 1;
+
+  this.update = function(dt){
+    this.moving = false;
+
+    if (!this.mesh)
+      return;
+
+    if (this.input.pressed('down')) {
+      this.moving = true;
+      this.currentDirection = 2;
+      this.mesh.position.y -= this.speed * dt;
+    }
+
+    if (this.input.pressed('left')) {
+      this.moving = true;
+      this.currentDirection = 1;
+      this.mesh.position.x -= this.speed * dt;
+    }
+
+    if (this.input.pressed('right')) {
+      this.moving = true;
+      this.currentDirection = 3;
+      this.mesh.position.x += this.speed * dt;
+    }
+
+    if (this.input.pressed('up')) {
+      this.moving = true;
+      this.currentDirection = 0;
+      this.mesh.position.y += this.speed * dt;
+    }
+
+    if (this.input.pressed('action')) {
+      // action
+    }
+
+    if (this.input.pressed('menu')) {
+      // menu
+    }
+
+    if (this.animatedTexture){
+      this.animatedTexture.selectRow(this.currentDirection, this.moving);
+      this.animatedTexture.update(dt);
+    }
+  }
+
+  this.cameraGravity = 20;
+
+  this.getCameraGravity = function(){
+    var velocity = new THREE.Vector2(0, 0);
+    switch (this.currentDirection) { //future ronald, think of a better solution for this.
+      case 0:
+        velocity.y += 1;
+        break;
+      case 1:
+        velocity.x -= 1;
+        break;
+      case 2:
+        velocity.y -= 1;
+        break;
+      case 3:
+        velocity.x += 1;
+        break;
+    }
+
+    velocity.multiplyScalar(this.speed * 3);
+
+    velocity.add(this.mesh.position);
+    return new THREE.Vector2(velocity.x * this.cameraGravity, velocity.y * this.cameraGravity);
+  }
+}
+
+module.exports = Player;
+
+},{"../../vendor/three.min.js":27,"./animated_texture.js":12,"./image_loader.js":16,"./rect_shape.js":18}],18:[function(require,module,exports){
+var THREE = require('../../vendor/three.min.js');
+
+var rectWidth = 1;
+var rectLength = 1;
+var rectShape = new THREE.Shape();
+rectShape.moveTo( 0,0 );
+rectShape.lineTo( 0, rectWidth );
+rectShape.lineTo( rectLength, rectWidth );
+rectShape.lineTo( rectLength, 0 );
+rectShape.lineTo( 0, 0 );
+
+module.exports = rectShape;
+},{"../../vendor/three.min.js":27}],19:[function(require,module,exports){
+function ShaderLoader(){
+  this.import = function(shadersList, listener) {
+    this.shadersList = shadersList;
+    this.n = 0;
+    this.shaders = {};
+    this.listener = listener;
+
+    for(index in this.shadersList){
+      this.load(shadersList[index]);
+    }
+  }
 
   this.load = function(filename){
     var xhttp = new XMLHttpRequest();
@@ -4309,18 +4462,12 @@ function ShaderLoader(shadersList){
     xhttp.send();
   }
 
-  for(index in shadersList){
-    this.load(shadersList[index]);
-  }
-
-
   this.save = function(filename, content){
     this.shaders[filename] = content;
     this.n++;
 
-    if (this.n == shadersList.length)
-      gameLoader.loadedShaders();
-      //console.log("loaded all shaders");
+    if (this.n == this.shadersList.length)
+      this.listener.loadedShaders();
   }
 
   this.get = function(filename){
@@ -4329,10 +4476,40 @@ function ShaderLoader(shadersList){
 
 }
 
+module.exports = new ShaderLoader;
+},{}],20:[function(require,module,exports){
+var THREE = require('../../vendor/three.min.js');
+var Chunk = require('./chunk.js')
 
-module.exports = init;
+function World(){
+    this.group = new THREE.Group();
+    this.entities = [];
 
-},{"../vendor/three.min.js":15,"./input_state.js":11,"log4js":6}],11:[function(require,module,exports){
+    this.loadChunks = function(){
+      //var chunk1 = new Chunk();
+      //chunk1.setPosition(-1, -1);
+      //this.group.add(chunk1.mesh);
+
+      var chunk2 = new Chunk();
+      chunk2.setPosition(0, 0);
+      this.group.add(chunk2.mesh);
+
+      //var chunk3 = new Chunk();
+      //chunk3.setPosition(0, -1);
+      //this.group.add(chunk3.mesh);
+
+      //var chunk4 = new Chunk();
+      //chunk4.setPosition(-1, 0);
+      //this.group.add(chunk4.mesh);
+    }
+
+    this.addEntity = function(entity){
+      this.entities[this.entities.length] = entity;
+    }
+}
+
+module.exports = World;
+},{"../../vendor/three.min.js":27,"./chunk.js":14}],21:[function(require,module,exports){
 var keyboard = require('./input_state/keyboard.js');
 var gamepad = require('./input_state/gamepad.js');
 
@@ -4369,10 +4546,10 @@ InputState.prototype.pressed = function(button_id) {
 // Square => 2
 // Triangle => 3
 //
-module.exports = new InputState;
-},{"./input_state/gamepad.js":12,"./input_state/keyboard.js":13}],12:[function(require,module,exports){
-var log4js = require('log4js');
-var logger = log4js.getLogger('[GamepadState]');
+module.exports = InputState;
+
+},{"./input_state/gamepad.js":22,"./input_state/keyboard.js":23}],22:[function(require,module,exports){
+var logger = require('../logger.js');
 
 GamepadState  = function() {
   this.controllers = {};
@@ -4443,7 +4620,7 @@ GamepadState.prototype._buttonPressed = function(b) {
 }
 
 module.exports = new GamepadState;
-},{"log4js":6}],13:[function(require,module,exports){
+},{"../logger.js":24}],23:[function(require,module,exports){
 KeyboardState  = function(){
   // to store the current state
   this.keyCodes = {};
@@ -4524,27 +4701,95 @@ KeyboardState.prototype.pressed  = function(keyDesc){
 }
 
 module.exports = new KeyboardState;
-},{}],14:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 var log4js = require('log4js');
-var logger = log4js.getLogger('[Main]');
+var logger = log4js.getLogger('Main');
 
 log4js.configure({
   appenders: [
     {
       type: 'console',
       layout: {
-        type: 'basic'
+        type: 'pattern',
+        pattern: "[%5.5p] - %m%n"
       }
     }
   ]
 });
 
+// logger.setLevel("INFO");
+
+module.exports = logger;
+},{"log4js":6}],25:[function(require,module,exports){
+function NetworkInput(){
+
+  this.pressed = function(button_id){
+    return false;
+  }
+}
+
+module.exports = NetworkInput;
+
+},{}],26:[function(require,module,exports){
+var logger = require('./lib/logger.js');
+
 logger.info("Hi from main.js");
 
 var Game = require('./lib/game.js');
+var Client = require('./lib/client.js');
+var NetworkInput = require('./lib/network_input.js');
 
-window.Game = Game;
-},{"./lib/game.js":10,"log4js":6}],15:[function(require,module,exports){
+window.Game = new Game;
+window.Game.connectToServer = function(){
+  Client.connect();
+}
+
+Client.onwelcome = function(id){
+  Client.id = id;
+  window.Game.localPlayer.id = id;
+}
+
+Client.updatePlayerList = function(playerList){
+  console.log(Client.players)
+  for (index in playerList){
+    var newPlayer = playerList[index];
+
+    if (newPlayer.id == Client.id)
+      continue;
+
+    if (Client.players.indexOf(newPlayer.id) == -1){
+      logger.info("A new player has arrived");
+      Client.players.push(newPlayer.id);
+      var player = window.Game.addPlayer(new NetworkInput());
+      player.id = newPlayer.id;
+      player.position.x = newPlayer.x;
+      player.position.y = newPlayer.y;
+    } else {
+      for (var i=0; i < window.Game.players.length; i++) {
+        if (window.Game.players[i].id === newPlayer.id) {
+          window.Game.players[i].position.x = newPlayer.x;
+          window.Game.players[i].position.y = newPlayer.y;
+          break;
+        }
+      }
+    }
+  }
+}
+
+Client.playerLeft = function(player_id) {
+  logger.info("A player has left: " + player_id);
+  window.Game.removePlayer(player_id);
+}
+
+setInterval(function() {
+  var position = window.Game.localPlayer.position;
+  Client.sendPositionUpdate(position.x, position.y);
+}, 10)
+
+
+
+
+},{"./lib/client.js":10,"./lib/game.js":11,"./lib/logger.js":24,"./lib/network_input.js":25}],27:[function(require,module,exports){
 // threejs.org/license
 'use strict';var THREE={REVISION:"73"};"function"===typeof define&&define.amd?define("three",THREE):"undefined"!==typeof exports&&"undefined"!==typeof module&&(module.exports=THREE);
 void 0!==self.requestAnimationFrame&&void 0!==self.cancelAnimationFrame||function(){for(var a=0,b=["ms","moz","webkit","o"],c=0;c<b.length&&!self.requestAnimationFrame;++c)self.requestAnimationFrame=self[b[c]+"RequestAnimationFrame"],self.cancelAnimationFrame=self[b[c]+"CancelAnimationFrame"]||self[b[c]+"CancelRequestAnimationFrame"];void 0===self.requestAnimationFrame&&void 0!==self.setTimeout&&(self.requestAnimationFrame=function(b){var c=Date.now(),g=Math.max(0,16-(c-a)),f=self.setTimeout(function(){b(c+
@@ -5415,11 +5660,11 @@ THREE.MorphBlendMesh.prototype.setAnimationDuration=function(a,b){var c=this.ani
 THREE.MorphBlendMesh.prototype.getAnimationDuration=function(a){var b=-1;if(a=this.animationsMap[a])b=a.duration;return b};THREE.MorphBlendMesh.prototype.playAnimation=function(a){var b=this.animationsMap[a];b?(b.time=0,b.active=!0):console.warn("THREE.MorphBlendMesh: animation["+a+"] undefined in .playAnimation()")};THREE.MorphBlendMesh.prototype.stopAnimation=function(a){if(a=this.animationsMap[a])a.active=!1};
 THREE.MorphBlendMesh.prototype.update=function(a){for(var b=0,c=this.animationsList.length;b<c;b++){var d=this.animationsList[b];if(d.active){var e=d.duration/d.length;d.time+=d.direction*a;if(d.mirroredLoop){if(d.time>d.duration||0>d.time)d.direction*=-1,d.time>d.duration&&(d.time=d.duration,d.directionBackwards=!0),0>d.time&&(d.time=0,d.directionBackwards=!1)}else d.time%=d.duration,0>d.time&&(d.time+=d.duration);var g=d.start+THREE.Math.clamp(Math.floor(d.time/e),0,d.length-1),f=d.weight;g!==d.currentFrame&&
 (this.morphTargetInfluences[d.lastFrame]=0,this.morphTargetInfluences[d.currentFrame]=1*f,this.morphTargetInfluences[g]=0,d.lastFrame=d.currentFrame,d.currentFrame=g);e=d.time%e/e;d.directionBackwards&&(e=1-e);d.currentFrame!==d.lastFrame?(this.morphTargetInfluences[d.currentFrame]=e*f,this.morphTargetInfluences[d.lastFrame]=(1-e)*f):this.morphTargetInfluences[d.currentFrame]=f}}};
-},{}],16:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 
-},{}],17:[function(require,module,exports){
-arguments[4][16][0].apply(exports,arguments)
-},{"dup":16}],18:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"dup":28}],30:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -5719,7 +5964,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],19:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -5744,7 +5989,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],20:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -5972,7 +6217,7 @@ var substr = 'ab'.substr(-1) === 'b'
 ;
 
 }).call(this,require('_process'))
-},{"_process":21}],21:[function(require,module,exports){
+},{"_process":33}],33:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6065,14 +6310,14 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],22:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],23:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -6662,4 +6907,4 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":22,"_process":21,"inherits":19}]},{},[14]);
+},{"./support/isBuffer":34,"_process":33,"inherits":31}]},{},[26]);
