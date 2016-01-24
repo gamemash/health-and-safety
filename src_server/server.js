@@ -75,6 +75,7 @@ function broadcastPlayerList(){
 }
 
 function broadcastToAll(message) {
+  console.log("broadcast: ", message)
   for (var i=0; i < players.length; i++) {
     players[i].connection.sendUTF(JSON.stringify( message ));
   }
@@ -123,3 +124,7 @@ function deregisterPlayer(connection) {
     data: { id: player.id }
   })
 }
+
+setInterval(function() {
+  broadcastPlayerList()
+}, 10)

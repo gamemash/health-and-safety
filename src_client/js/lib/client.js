@@ -32,7 +32,7 @@ function Client(){
   }
 
   this.onmessage = function (message) {
-    logger.debug("message", message.data)
+    // logger.debug("message", message.data)
     var parsedData = JSON.parse(message.data);
 
     switch(parsedData["type"]){

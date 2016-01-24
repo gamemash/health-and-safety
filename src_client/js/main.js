@@ -17,16 +17,28 @@ Client.onwelcome = function(id){
 }
 
 Client.updatePlayerList = function(playerList){
+  console.log(Client.players)
   for (index in playerList){
-    var newPlayerId = playerList[index].id;
+    var newPlayer = playerList[index];
 
-    if (newPlayerId == Client.id)
+    if (newPlayer.id == Client.id)
       continue;
-    if (Client.players.indexOf(newPlayerId) == -1){
+
+    if (Client.players.indexOf(newPlayer.id) == -1){
       logger.info("A new player has arrived");
-      Client.players.push(newPlayerId);
-      var newPlayer = window.Game.addPlayer(new NetworkInput());
-      newPlayer.id = newPlayerId;
+      Client.players.push(newPlayer.id);
+      var player = window.Game.addPlayer(new NetworkInput());
+      player.id = newPlayer.id;
+      player.position.x = newPlayer.x;
+      player.position.y = newPlayer.y;
+    } else {
+      for (var i=0; i < window.Game.players.length; i++) {
+        if (window.Game.players[i].id === newPlayer.id) {
+          window.Game.players[i].position.x = newPlayer.x;
+          window.Game.players[i].position.y = newPlayer.y;
+          break;
+        }
+      }
     }
   }
 }
@@ -39,7 +51,7 @@ Client.playerLeft = function(player_id) {
 setInterval(function() {
   var position = window.Game.localPlayer.position;
   Client.sendPositionUpdate(position.x, position.y);
-}, 3000)
+}, 10)
 
 
 
