@@ -127,4 +127,4 @@ function deregisterPlayer(connection) {
 
 setInterval(function() {
   broadcastPlayerList()
-}, 10)
+}, 30)

@@ -51,7 +51,7 @@ Client.playerLeft = function(player_id) {
 setInterval(function() {
   var position = window.Game.localPlayer.position;
   Client.sendPositionUpdate(position.x, position.y);
-}, 10)
+}, 30)
 
 
 
