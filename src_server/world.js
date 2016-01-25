@@ -23,17 +23,15 @@ function Player(){
   this.speed = 20;
   this.position = {'x': 0, 'y': 0};
   this.direction = [0, -1];
-  this.moving = true;
+  this.moving = false;
 
   this.advance = function(dt){
-    console.log("dt in advance", dt);
     if (this.moving){
       this.position.x += dt * this.direction[0];
       this.position.y += dt * this.direction[1];
     }
   }
   this.apply = function(data){
-    console.log("data", data);
     switch(data.type){
       case 'changeDirection':
         this.moving = true;
@@ -52,19 +50,19 @@ function Command(){
 }
 
 function Client() {
+  this.lastAppliedCommandAt = 0;
   this.commands = new RingBuffer(10);
   this.addCommand = function(timestamp, data){
     this.commands.push( { 'timestamp': timestamp, 'data': data });
   }
   this.player = new Player();
 
-  this.getCommandsSince = function(timestamp){
-    console.log("get commands since", timestamp);
+  this.getNewCommands = function(){
     var result = [];
     var i = 0;
     while(true){
       var nextCommand = this.commands.get(i);
-      if (nextCommand && nextCommand['timestamp'] > timestamp){
+      if (nextCommand && nextCommand['timestamp'] > this.lastAppliedCommandAt){
         result.push(nextCommand);
       } else {
         return result;
@@ -87,23 +85,20 @@ function World() {
 
   this.advance = function(dt){
     for(var i in this.clients){
-      console.log("------ client loop ------");
       var client = this.clients[i];
       var timeTillCommand = 0;
       var time = this.time;
-      var commands = client.getCommandsSince(this.time);
-      console.log("what commands", commands);
+      var commands = client.getNewCommands();
       var command;
       while(command = commands.pop()){
         timeTillCommand = command.timestamp - time;
-        console.log("command", command.data.type);
         client.player.advance(timeTillCommand);
         client.player.apply(command.data);
+        client.lastAppliedCommandAt = command.timestamp;
         time += timeTillCommand;
       }
 
       var timeTodo = dt - timeTillCommand;
-      console.log("time", time, timeTodo );
       client.player.advance(timeTodo);
     }
     this.time += dt;
@@ -111,16 +106,19 @@ function World() {
 
 }
 
-var world = new World();
-world.time = 0;
-var client = world.addClient();
-console.log(client.player.position);
-client.addCommand(1, {'type': 'changeDirection', 'direction': [1, 0]});
-client.addCommand(1.5, {'type': 'stopMoving' });
-world.advance(2);
-//console.log("player", client.player);
-client.addCommand(2.5, {'type': 'changeDirection', 'direction': [0, 1]});
-world.advance(1);
-console.log("player", client.player);
-//client.addCommand(100, {'type': 'startMoving', 'direction': [1, 0]});
-//console.log(client);
+//var world = new World();
+//world.time = 0;
+//var client = world.addClient();
+//console.log(client.player.position);
+//client.addCommand(1, {'type': 'changeDirection', 'direction': [1, 0]});
+//client.addCommand(1.5, {'type': 'stopMoving' });
+//world.advance(2);
+//client.addCommand(2.5, {'type': 'changeDirection', 'direction': [0, 1]});
+//world.advance(2);
+//
+//console.log("player at", world.time,  client.player);
+//client.addCommand(3.0, {'type': 'changeDirection', 'direction': [0, -1]});
+//client.addCommand(3.5, {'type': 'changeDirection', 'direction': [1, 0]});
+//client.addCommand(3.9, {'type': 'stopMoving'});
+//world.advance(2);
+//console.log("player at", world.time, client.player);
