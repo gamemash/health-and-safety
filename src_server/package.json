@@ -1,0 +1,12 @@
+{
+  "name": "health-and-safety-server",
+  "version": "0.0.1",
+  "description": "A server for a little game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "websocket": "^1.0.22"
+  }
+}
