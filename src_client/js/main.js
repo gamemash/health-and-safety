@@ -17,7 +17,6 @@ Client.onwelcome = function(id){
 }
 
 Client.updatePlayerList = function(playerList){
-  console.log(Client.players)
   for (index in playerList){
     var newPlayer = playerList[index];
 
