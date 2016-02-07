@@ -30,13 +30,22 @@ Gamepad controlled character in the center of the screen
   - Center of gravity camera
   - Game world
 
-
 Sprint 1
 --------
 
   - World editor
 
   - Collision detection
+
+Sprint 2
+--------
+
+  - Enemies & Combat
+
+Backlog
+-------
+
+  - Starting zone that introduces a game mechanic
 
   - Multiplayer
     - Note passing
@@ -50,13 +59,6 @@ Sprint 1
     - Try to use firebase for coordination of requests/availables and notes in the gameworld
     - Use a node.js websocket server
 
-
-Sprint 2
---------
-
-  - Enemies & Combat
-
-  - Starting zone that introduces a game mechanic
 
 
 
