@@ -2,9 +2,8 @@ var ImageLoader = require('./image_loader.js');
 var AnimatedTexture = require('./animated_texture.js');
 var THREE = require('../../vendor/three.min.js');
 var rectShape = require('./rect_shape.js');
-var input = require('../input_state.js');
 
-function Player(){
+function Player(input){
   this.currentDirection = 2; //"WASD" = 0123
   this.moving = false;
   this.speed = 2.0;

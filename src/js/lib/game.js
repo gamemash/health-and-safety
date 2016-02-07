@@ -11,6 +11,7 @@ var Camera = require('./game/camera.js');
 var World = require('./game/world.js');
 var House = require('./game/house.js');
 var Player = require('./game/player.js')
+var input = require('./input_state.js');
 
 var images = ["tilesheet.png", "wizard.png", "house.png"];
 var shaders = ["world.frag", "world.vert"];
@@ -37,7 +38,7 @@ function Game() {
     var group = new THREE.Group();
 
     {
-      player = new Player();
+      player = new Player(input);
       group.add(player.mesh);
       world.addEntity(player);
     }

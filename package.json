@@ -1,0 +1,29 @@
+{
+  "name": "health-and-safety",
+  "version": "0.0.0",
+  "description": "Cool game for cool guys",
+  "main": "src/main.js",
+  "dependencies": {
+    "log4js": "^0.6.31"
+  },
+  "devDependencies": {
+    "browserify": "^13.0.0",
+    "budo": "^8.0.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gamemash/health-and-safety.git"
+  },
+  "keywords": [
+    "COOL"
+  ],
+  "author": "Oliver & Ronald",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gamemash/health-and-safety/issues"
+  },
+  "homepage": "https://github.com/gamemash/health-and-safety#readme"
+}
