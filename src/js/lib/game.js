@@ -37,13 +37,14 @@ function Game() {
     gameCanvas.appendChild( renderer.domElement );
 
     this.player = new Player(input);
+    this.fireplace = new Fireplace();
     world.addEntity(this.player);
 
     world.addEntity(new House(-2, 1));
 
     world.addEntity(new House(12, 1));
 
-    this.fireplace = new Fireplace();
+
     world.addEntity(this.fireplace);
 
     world.loadChunks();
