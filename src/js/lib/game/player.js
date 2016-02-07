@@ -1,25 +1,15 @@
 var ImageLoader = require('./image_loader.js');
-var AnimatedTexture = require('./animated_texture.js');
 var THREE = require('../../vendor/three.min.js');
-var rectShape = require('./rect_shape.js');
+var Wizard = require('./entities/wizard.js');
 
 function Player(input){
   this.currentDirection = 2; //"WASD" = 0123
   this.moving = false;
   this.speed = 2.0;
 
-  if (!Player.texture){
-    Player.texture = ImageLoader.createSprite("wizard.png", 468, 780, 0, 0);
-  }
-  var rectGeom = new THREE.ShapeGeometry( rectShape );
-  this.material = new THREE.MeshBasicMaterial( {
-    map: Player.texture,
-    transparent: true
-  } );
-  this.animatedTexture = new AnimatedTexture(Player.texture);
-  this.mesh = new THREE.Mesh( rectGeom, this.material );
+  this.character = new Wizard();
+  this.mesh = this.character.mesh;
   this.position = this.mesh.position;
-
   this.position.z = 1;
 
   this.update = function(dt){
@@ -60,10 +50,8 @@ function Player(input){
       // menu
     }
 
-    if (this.animatedTexture){
-      this.animatedTexture.selectRow(this.currentDirection, this.moving);
-      this.animatedTexture.update(dt);
-    }
+    this.character.animatedTexture.selectRow(this.currentDirection, this.moving);
+    this.character.animatedTexture.update(dt);
 
   }
 

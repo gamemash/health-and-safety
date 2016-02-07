@@ -7,14 +7,15 @@ var rectShape = require('./game/rect_shape.js');
 var ImageLoader = require('./game/image_loader.js');
 var ShaderLoader = require('./game/shader_loader.js');
 
-var Camera = require('./game/camera.js');
-var World = require('./game/world.js');
-var House = require('./game/house.js');
-var Player = require('./game/player.js')
+var Camera    = require('./game/camera.js');
+var World     = require('./game/world.js');
+var House     = require('./game/house.js');
+var Player    = require('./game/player.js')
 var Fireplace = require('./game/entities/fireplace.js')
-var input = require('./input_state.js');
+var Crab      = require('./game/entities/crab.js')
+var input     = require('./input_state.js');
 
-var images = ["tilesheet.png", "wizard.png", "house.png"];
+var images = ["tilesheet.png", "wizard.png", "house.png", "crab.png"];
 var shaders = ["world.frag", "world.vert"];
 
 function Game() {
@@ -40,6 +41,7 @@ function Game() {
     this.fireplace = new Fireplace();
 
     world.addEntity(this.player);
+    world.addEntity(new Crab());
     world.addEntity(new House(-2, 1));
     world.addEntity(new House(12, 1));
     world.addEntity(this.fireplace);
