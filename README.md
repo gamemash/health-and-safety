@@ -8,11 +8,10 @@ Building and Developing
 -----------------------
 
 You will need to have node installed, which should give you NPM.
-Then install browserify and budo:
+Then install dependencies:
 
 ```
-npm install -g browserify
-npm install -g budo
+npm install
 ```
 
 Now you can type `make` to build the project.
