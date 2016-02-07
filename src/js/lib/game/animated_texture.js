@@ -1,15 +1,20 @@
 var THREE = require('../../vendor/three.min.js');
 
-function AnimatedTexture(texture){
-  this.textureMap = [6, 6, 6, 4, 4, 4, 4, 4, 4, 4];
-  this.movingDirectionRowMap = [4, 5, 3, 5];
+function AnimatedTexture(texture, textureMap, movingDirectionRowMap, standingDirectionRowMap){
   this.directionMap = [1, -1, 1, 1];
-  this.standingDirectionRowMap = [1, 2, 0, 2];
+
+  this.textureMap = textureMap;
+
+  this.movingDirectionRowMap = movingDirectionRowMap;
+  this.standingDirectionRowMap = standingDirectionRowMap;
 
   this.currentRow = 0;
   this.currentColumn = 0;
-  this.numberOfColumns = 6;
-  this.numberOfRows = 10;
+
+  this.numberOfColumns = Math.max.apply(null, textureMap);
+  this.numberOfRows = textureMap.length;
+  console.log(this.numberOfColumns, this.numberOfRows);
+
   texture.repeat.set(texture.PowerOf2Factor.x / this.numberOfColumns, texture.PowerOf2Factor.y / this.numberOfRows);
   texture.offset.y = this.currentRow * texture.PowerOf2Factor.y / this.numberOfRows;
   texture.wrapS =  texture.wrapT = THREE.RepeatWrapping;

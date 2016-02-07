@@ -1,13 +1,14 @@
 var ImageLoader = require('./image_loader.js');
 var THREE = require('../../vendor/three.min.js');
 var Wizard = require('./entities/wizard.js');
+var Crab = require('./entities/crab.js');
 
 function Player(input){
   this.currentDirection = 2; //"WASD" = 0123
   this.moving = false;
   this.speed = 2.0;
 
-  this.character = new Wizard();
+  this.character = new Crab();
   this.mesh = this.character.mesh;
   this.position = this.mesh.position;
   this.position.z = 1;
@@ -50,8 +51,10 @@ function Player(input){
       // menu
     }
 
-    this.character.animatedTexture.selectRow(this.currentDirection, this.moving);
-    this.character.animatedTexture.update(dt);
+    this.character.currentDirection = this.currentDirection;
+    this.character.moving = this.moving;
+    this.character.update(dt);
+
 
   }
 
