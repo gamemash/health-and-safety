@@ -64,7 +64,7 @@ function Game() {
     for(index in world.entities){
       var entity = world.entities[index];
 
-      entity.update(dt);
+      entity.update(dt, world.entities);
 
       if (entity.mesh.position.distanceTo(this.player.mesh.position) > viewCorrectionDistance)
         continue;

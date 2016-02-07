@@ -13,7 +13,6 @@ function AnimatedTexture(texture, textureMap, movingDirectionRowMap, standingDir
 
   this.numberOfColumns = Math.max.apply(null, textureMap);
   this.numberOfRows = textureMap.length;
-  console.log(this.numberOfColumns, this.numberOfRows);
 
   texture.repeat.set(texture.PowerOf2Factor.x / this.numberOfColumns, texture.PowerOf2Factor.y / this.numberOfRows);
   texture.offset.y = this.currentRow * texture.PowerOf2Factor.y / this.numberOfRows;
