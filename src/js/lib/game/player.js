@@ -22,8 +22,6 @@ function Player(input){
 
   this.position.z = 1;
 
-
-
   this.update = function(dt){
     this.moving = false;
 

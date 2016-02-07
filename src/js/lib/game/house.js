@@ -25,6 +25,10 @@ function House(x, y){
   this.getCameraGravity = function(){
     return new THREE.Vector2((this.mesh.position.x + 2.5) * this.cameraGravity, (this.mesh.position.y + 2.5) * this.cameraGravity);
   }
+
+  this.update = function(){
+
+  }
 }
 
 module.exports = House;

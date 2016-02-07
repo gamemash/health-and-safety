@@ -1,9 +1,13 @@
 var THREE = require('../../vendor/three.min.js');
 var Chunk = require('./chunk.js')
+var scene = new THREE.Scene();
+var group = new THREE.Group();
 
 function World(){
     this.group = new THREE.Group();
     this.entities = [];
+
+    this.scene = scene;
 
     this.loadChunks = function(){
       //var chunk1 = new Chunk();
@@ -25,6 +29,7 @@ function World(){
     }
 
     this.addEntity = function(entity){
+      this.group.add(entity.mesh);
       this.entities[this.entities.length] = entity;
     }
 }

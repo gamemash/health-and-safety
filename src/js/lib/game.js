@@ -11,6 +11,7 @@ var Camera = require('./game/camera.js');
 var World = require('./game/world.js');
 var House = require('./game/house.js');
 var Player = require('./game/player.js')
+var Fireplace = require('./game/entities/fireplace.js')
 var input = require('./input_state.js');
 
 var images = ["tilesheet.png", "wizard.png", "house.png"];
@@ -19,7 +20,7 @@ var shaders = ["world.frag", "world.vert"];
 function Game() {
   var cameraLocationTest;
   var camera;
-  var scene = new THREE.Scene();
+
   var renderer = new THREE.WebGLRenderer({alpha: true});
   var player;
   var world = new World();
@@ -35,48 +36,21 @@ function Game() {
     renderer.setSize( window.innerWidth, window.innerHeight );
     gameCanvas.appendChild( renderer.domElement );
 
-    var group = new THREE.Group();
+    this.player = new Player(input);
+    world.addEntity(this.player);
 
-    {
-      player = new Player(input);
-      group.add(player.mesh);
-      world.addEntity(player);
-    }
+    world.addEntity(new House(-2, 1));
 
-    {
-      var newHouse = new House(-2, 1);
-      group.add(newHouse.mesh);
-      world.addEntity(newHouse);
-    }
+    world.addEntity(new House(12, 1));
 
-    {
-      var newHouse = new House(12, 1);
-      group.add(newHouse.mesh);
-      world.addEntity(newHouse);
-    }
+    this.fireplace = new Fireplace();
+    world.addEntity(this.fireplace);
 
-    {
-      world.loadChunks();
-      group.add(world.group);
-    }
+    world.loadChunks();
 
-    camera = new Camera();
+    this.camera = new Camera();
 
-    {
-      var texture = ImageLoader.createSprite("tilesheet.png", 42, 57, 243, 3);
-      var material = new THREE.MeshBasicMaterial( {
-        map: texture,
-        transparent: true
-      } );
-
-      var rectGeom = new THREE.ShapeGeometry(rectShape );
-      cameraLocationTest = new THREE.Mesh( rectGeom, material ) ;
-
-      group.add(cameraLocationTest);
-    }
-
-
-    scene.add( group );
+    world.scene.add( world.group );
 
     this.render();
   }
@@ -84,32 +58,33 @@ function Game() {
   this.render = function() {
     var dt = 1.0 / 60.0;
 
-    if (player)
-      player.update(dt);
-
     var sumIntensity = 0.0;
     var cameraPosition = new THREE.Vector2(0, 0);
 
     for(index in world.entities){
       var entity = world.entities[index];
-      if (entity.mesh.position.distanceTo(player.mesh.position) > viewCorrectionDistance)
+
+      entity.update(dt);
+
+      if (entity.mesh.position.distanceTo(this.player.mesh.position) > viewCorrectionDistance)
         continue;
+
       cameraPosition.add(entity.getCameraGravity());
       sumIntensity += entity.cameraGravity;
     }
 
     cameraPosition.divideScalar(sumIntensity);
 
-    if (cameraLocationTest){ //show the desired camera center in the world
-      cameraLocationTest.position.setX(cameraPosition.x);
-      cameraLocationTest.position.setY(cameraPosition.y);
+    if (this.fireplace){ //show the desired camera center in the world
+      this.fireplace.position.setX(cameraPosition.x);
+      this.fireplace.position.setY(cameraPosition.y);
     }
 
-    if (camera)
-      camera.update(cameraPosition, dt);
+    if (this.camera)
+      this.camera.update(cameraPosition, dt);
 
     requestAnimationFrame( this.render.bind(this) );
-    renderer.render( scene, camera.camera );
+    renderer.render( world.scene, this.camera.camera );
   }
 }
 
