@@ -5,6 +5,8 @@ var AnimatedTexture = require('../animated_texture.js');
 
 ///WIP
 function Crab() {
+  this.currentDirection = 0;
+  this.moving = false;
   this.update = function(dt){
     this.animatedTexture.selectRow(this.currentDirection, this.moving);
     this.animatedTexture.update(dt);

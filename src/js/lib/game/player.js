@@ -8,7 +8,7 @@ function Player(input){
   this.moving = false;
   this.speed = 2.0;
 
-  this.character = new Crab();
+  this.character = new Wizard();
   this.mesh = this.character.mesh;
   this.position = this.mesh.position;
   this.position.z = 1;
