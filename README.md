@@ -20,6 +20,20 @@ You can also type `make develop` to auto build the project as you code.
 The browser will open for you, and refresh as you change files.
 
 
+Multiplayer Server
+------------------
+
+The multiplayer server can be deployed to heroku.
+
+```
+heroku login
+cd src_server
+heroku create
+git push heroku master
+heroku ps:scale web=1
+```
+
+
 Sprint 0
 --------
 
@@ -34,12 +48,29 @@ Gamepad controlled character in the center of the screen
 Sprint 1
 --------
 
-Multiplayer
+  - World editor
+
+  - Collision detection
+
+  - Multiplayer
+    - Note passing
+      - players can drop a note on the world that other players can read
+
+    - Follow bloodborne model of multiplayer
+      - Request for help
+      - Available for help
+      - Set password
+
+    - Try to use firebase for coordination of requests/availables and notes in the gameworld
+    - Use a node.js websocket server
+
 
 Sprint 2
 --------
 
-Starting zone that introduces a game mechanic
+  - Enemies & Combat
+
+  - Starting zone that introduces a game mechanic
 
 
 
